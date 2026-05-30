@@ -1,6 +1,4 @@
-import { API_BASE_URL } from "@/config/env.js";
-
-const BASE_URL = API_BASE_URL;
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("authToken");

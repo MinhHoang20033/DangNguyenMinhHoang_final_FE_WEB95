@@ -9,4 +9,5 @@ export const EXCEL_COLUMN_WIDTH = 180;
 export const TASK_EXCEL_EXTENSIONS = [".xls", ".xlsx", ".csv"];
 export const TASK_EXCEL_ACCEPT = TASK_EXCEL_EXTENSIONS.join(",");
 
-export { FILE_BASE_URL } from "@/config/env.js";
+/** Origin for uploads — same host as API, without /api suffix */
+export const FILE_BASE_URL = String(import.meta.env.VITE_API_URL || "").replace(/\/api\/?$/, "");
