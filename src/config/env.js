@@ -2,7 +2,13 @@ const DEFAULT_ORIGIN = "http://localhost:5000";
 
 const normalizeUrl = (value) => String(value || "").replace(/\/$/, "");
 
-const apiBaseUrl = normalizeUrl(import.meta.env.VITE_API_URL) || `${DEFAULT_ORIGIN}/api`;
+const toApiBaseUrl = (value) => {
+  const normalized = normalizeUrl(value);
+  if (!normalized) return `${DEFAULT_ORIGIN}/api`;
+  return normalized.endsWith("/api") ? normalized : `${normalized}/api`;
+};
+
+const apiBaseUrl = toApiBaseUrl(import.meta.env.VITE_API_URL);
 
 /** Base URL for API requests, e.g. http://localhost:5000/api */
 export const API_BASE_URL = apiBaseUrl;
