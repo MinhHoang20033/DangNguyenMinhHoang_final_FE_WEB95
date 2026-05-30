@@ -9,4 +9,5 @@ export const EXCEL_COLUMN_WIDTH = 180;
 export const TASK_EXCEL_EXTENSIONS = [".xls", ".xlsx", ".csv"];
 export const TASK_EXCEL_ACCEPT = TASK_EXCEL_EXTENSIONS.join(",");
 
-export { FILE_BASE_URL } from "@/config/env.js";
+/** Origin of the API (same host as uploads); align with `src/utils/api.js` in dev */
+export const FILE_BASE_URL = "http://localhost:5000";
