@@ -129,7 +129,7 @@ export const computeDashboardData = (projects, employees) => {
 
   const recentProjects = [...projects]
     .sort((left, right) => getProjectCreatedAt(right) - getProjectCreatedAt(left))
-    .slice(0, 6);
+    .slice(0, 9);
 
   const projectsByTasks = [...projects]
     .sort((left, right) => (right.tasks?.length ?? 0) - (left.tasks?.length ?? 0))
@@ -137,10 +137,6 @@ export const computeDashboardData = (projects, employees) => {
       ...project,
       progress: getTaskProgress(project),
     }));
-
-  const projectsByMembers = [...projects].sort(
-    (left, right) => (right.members?.length ?? 0) - (left.members?.length ?? 0),
-  );
 
   const memberTaskMap = employees.reduce((accumulator, employee) => {
     accumulator[employee._id] = {
@@ -173,10 +169,10 @@ export const computeDashboardData = (projects, employees) => {
     });
   });
 
+  // Nhân sự đang được giao ít nhất 1 task chưa hoàn thành, xếp theo số task chờ nhiều nhất
   const topEmployeesByTasks = Object.values(memberTaskMap)
-    .filter((item) => item.total > 0)
-    .sort((left, right) => right.pending - left.pending || right.total - left.total)
-    .slice(0, 5);
+    .filter((item) => item.pending > 0)
+    .sort((left, right) => right.pending - left.pending || right.total - left.total);
 
   const unassignedProjectMembers = Object.values(memberTaskMap)
     .filter((item) => item.projectNames.size > 0 && item.total === 0)
@@ -197,7 +193,6 @@ export const computeDashboardData = (projects, employees) => {
     upcomingDeadlineProjects,
     recentProjects,
     projectsByTasks,
-    projectsByMembers,
     topEmployeesByTasks,
     unassignedProjectMembers,
     statusCounts: {
