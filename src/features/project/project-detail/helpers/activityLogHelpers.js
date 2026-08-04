@@ -5,7 +5,6 @@ export const ACTIVITY_SECTION_FILTER = {
   PROGRESS: "progressChecks",
   OVERVIEW: "overview",
   MEMBERS: "members",
-  OTHER: "other",
 };
 
 export const ACTIVITY_SECTION_FILTER_OPTIONS = [
@@ -15,16 +14,7 @@ export const ACTIVITY_SECTION_FILTER_OPTIONS = [
   { value: ACTIVITY_SECTION_FILTER.PROGRESS, label: "Tiến độ" },
   { value: ACTIVITY_SECTION_FILTER.OVERVIEW, label: "Thông tin dự án" },
   { value: ACTIVITY_SECTION_FILTER.MEMBERS, label: "Nhân sự" },
-  { value: ACTIVITY_SECTION_FILTER.OTHER, label: "Khác" },
 ];
-
-const KNOWN_SECTION_KEYS = new Set([
-  ACTIVITY_SECTION_FILTER.TASKS,
-  ACTIVITY_SECTION_FILTER.FILES,
-  ACTIVITY_SECTION_FILTER.PROGRESS,
-  ACTIVITY_SECTION_FILTER.OVERVIEW,
-  ACTIVITY_SECTION_FILTER.MEMBERS,
-]);
 
 export const getActivitySectionMeta = (sectionKey = "") => {
   switch (sectionKey) {
@@ -39,7 +29,7 @@ export const getActivitySectionMeta = (sectionKey = "") => {
     case ACTIVITY_SECTION_FILTER.MEMBERS:
       return { label: "Nhân sự", color: "orange" };
     default:
-      return { label: "Khác", color: "default" };
+      return { label: sectionKey || "Nhật ký", color: "default" };
   }
 };
 
@@ -49,11 +39,7 @@ export const filterActivityLogs = (logs = [], { keyword = "", section = ACTIVITY
   return logs.filter((log) => {
     const sectionKey = log.sectionKey || "";
 
-    if (section === ACTIVITY_SECTION_FILTER.OTHER) {
-      if (KNOWN_SECTION_KEYS.has(sectionKey)) {
-        return false;
-      }
-    } else if (section !== ACTIVITY_SECTION_FILTER.ALL && sectionKey !== section) {
+    if (section !== ACTIVITY_SECTION_FILTER.ALL && sectionKey !== section) {
       return false;
     }
 
