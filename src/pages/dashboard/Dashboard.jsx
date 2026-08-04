@@ -51,6 +51,26 @@ const surfaceStyle = {
   boxShadow: "0 18px 40px rgba(15, 23, 42, 0.08)",
 };
 
+const interactiveRowStyle = {
+  borderRadius: 16,
+  border: "1px solid #e2e8f0",
+  padding: "12px 14px",
+  background: "#fff",
+  cursor: "pointer",
+  transition: "box-shadow 0.2s ease, transform 0.2s ease",
+};
+
+const interactiveRowHoverHandlers = {
+  onMouseEnter: (event) => {
+    event.currentTarget.style.boxShadow = "0 8px 20px rgba(15, 23, 42, 0.08)";
+    event.currentTarget.style.transform = "translateY(-1px)";
+  },
+  onMouseLeave: (event) => {
+    event.currentTarget.style.boxShadow = "none";
+    event.currentTarget.style.transform = "none";
+  },
+};
+
 const statCards = [
   {
     key: "totalProjects",
@@ -237,22 +257,8 @@ function DeadlineLinkRow({ item, navigate }) {
           navigate(`/projects/${item.projectId}`);
         }
       }}
-      style={{
-        borderRadius: 16,
-        border: "1px solid #e2e8f0",
-        padding: "12px 14px",
-        background: "#fff",
-        cursor: "pointer",
-        transition: "box-shadow 0.2s ease, transform 0.2s ease",
-      }}
-      onMouseEnter={(event) => {
-        event.currentTarget.style.boxShadow = "0 8px 20px rgba(15, 23, 42, 0.08)";
-        event.currentTarget.style.transform = "translateY(-1px)";
-      }}
-      onMouseLeave={(event) => {
-        event.currentTarget.style.boxShadow = "none";
-        event.currentTarget.style.transform = "none";
-      }}
+      style={interactiveRowStyle}
+      {...interactiveRowHoverHandlers}
     >
       <Row justify="space-between" align="middle" wrap={false} gutter={12}>
         <Col flex="auto" style={{ minWidth: 0 }}>
@@ -285,22 +291,8 @@ function ProjectLinkRow({ project, navigate, extra }) {
           navigate(`/projects/${project._id}`);
         }
       }}
-      style={{
-        borderRadius: 16,
-        border: "1px solid #e2e8f0",
-        padding: "12px 14px",
-        background: "#fff",
-        cursor: "pointer",
-        transition: "box-shadow 0.2s ease, transform 0.2s ease",
-      }}
-      onMouseEnter={(event) => {
-        event.currentTarget.style.boxShadow = "0 8px 20px rgba(15, 23, 42, 0.08)";
-        event.currentTarget.style.transform = "translateY(-1px)";
-      }}
-      onMouseLeave={(event) => {
-        event.currentTarget.style.boxShadow = "none";
-        event.currentTarget.style.transform = "none";
-      }}
+      style={interactiveRowStyle}
+      {...interactiveRowHoverHandlers}
     >
       <Row justify="space-between" align="middle" wrap={false} gutter={12}>
         <Col flex="auto" style={{ minWidth: 0 }}>
@@ -313,6 +305,42 @@ function ProjectLinkRow({ project, navigate, extra }) {
           <Tag color={statusPresentation.tagColor}>{statusPresentation.label}</Tag>
         </Col>
       </Row>
+    </div>
+  );
+}
+
+function ProjectProgressRow({ project, navigate }) {
+  const statusPresentation = getProjectStatusPresentation(project);
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => navigate(`/projects/${project._id}`)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          navigate(`/projects/${project._id}`);
+        }
+      }}
+      style={interactiveRowStyle}
+      {...interactiveRowHoverHandlers}
+    >
+      <Row justify="space-between" align="middle" style={{ marginBottom: 8 }}>
+        <Col>
+          <Text strong>{project.name || "Dự án chưa đặt tên"}</Text>
+        </Col>
+        <Col>
+          <Tag color={statusPresentation.tagColor}>{statusPresentation.label}</Tag>
+        </Col>
+      </Row>
+      <Progress
+        percent={project.progress.percent}
+        strokeColor={getProgressStrokeColor(project)}
+        trailColor="#e5e7eb"
+      />
+      <Text type="secondary">
+        Hoàn thành {project.progress.completedTasks}/{project.progress.totalTasks} task
+      </Text>
     </div>
   );
 }
@@ -650,42 +678,10 @@ export default function Dashboard() {
                 style={{ maxHeight: 420, overflowY: "auto", paddingRight: 8 }}
                 onScroll={handleProjectProgressScroll}
               >
-                <Space direction="vertical" size={18} style={{ width: "100%" }}>
-                  {visibleProjectsByTasks.map((project) => {
-                    const statusPresentation = getProjectStatusPresentation(project);
-
-                    return (
-                      <div
-                        key={project._id}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => navigate(`/projects/${project._id}`)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            navigate(`/projects/${project._id}`);
-                          }
-                        }}
-                        style={{ cursor: "pointer" }}
-                      >
-                        <Row justify="space-between" align="middle" style={{ marginBottom: 8 }}>
-                          <Col>
-                            <Text strong>{project.name || "Dự án chưa đặt tên"}</Text>
-                          </Col>
-                          <Col>
-                            <Tag color={statusPresentation.tagColor}>{statusPresentation.label}</Tag>
-                          </Col>
-                        </Row>
-                        <Progress
-                          percent={project.progress.percent}
-                          strokeColor={getProgressStrokeColor(project)}
-                          trailColor="#e5e7eb"
-                        />
-                        <Text type="secondary">
-                          Hoàn thành {project.progress.completedTasks}/{project.progress.totalTasks} task
-                        </Text>
-                      </div>
-                    );
-                  })}
+                <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                  {visibleProjectsByTasks.map((project) => (
+                    <ProjectProgressRow key={project._id} project={project} navigate={navigate} />
+                  ))}
                 </Space>
               </div>
             ) : (
