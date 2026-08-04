@@ -1,7 +1,12 @@
 import { Button, Card, Empty, Grid, Typography } from "antd";
 
 import { useProjectDetailModel } from "../../ProjectDetailContext.jsx";
-import { sectionCardStyle, sectionCardStyles } from "../../helpers/sectionStyles.js";
+import {
+  SECTION_SCROLL,
+  createScrollBoxStyle,
+  sectionCardStyle,
+  sectionCardStyles,
+} from "../../helpers/sectionStyles.js";
 import { SubtaskEditorModal } from "./SubtaskEditorModal.jsx";
 import { TaskEditorModal } from "./TaskEditorModal.jsx";
 import { TaskCardList } from "./TaskMobileList.jsx";
@@ -106,7 +111,9 @@ export function ProjectTasksSection() {
         )}
 
         {sortedTasks.length ? (
-          <TaskCardList tasks={sortedTasks} {...taskCardProps} />
+          <div style={createScrollBoxStyle(SECTION_SCROLL.tasks)}>
+            <TaskCardList tasks={sortedTasks} {...taskCardProps} />
+          </div>
         ) : (
           <Empty description={emptyDescription} />
         )}

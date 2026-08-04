@@ -1,4 +1,4 @@
-import { Card, Col, Grid, Row, Tag, Typography } from "antd";
+import { Card, Grid, Space, Tag, Typography } from "antd";
 import dayjs from "dayjs";
 
 import { EMPTY_VALUE, getProjectOverviewStatus } from "@/features/project";
@@ -24,54 +24,65 @@ export function ProjectOverviewSection() {
     : EMPTY_VALUE;
 
   const fields = [
-    { key: "status", label: "Trạng thái", node: <Tag color={overviewStatus.tagColor}>{overviewStatus.label}</Tag> },
+    {
+      key: "name",
+      label: "Tên dự án",
+      value: project.name || EMPTY_VALUE,
+    },
+    {
+      key: "status",
+      label: "Trạng thái",
+      node: <Tag color={overviewStatus.tagColor}>{overviewStatus.label}</Tag>,
+    },
     { key: "deadline", label: "Hạn dự án", value: deadlineLabel },
     { key: "manager", label: "Quản lý dự án", value: project.managerName || EMPTY_VALUE },
     { key: "site", label: "Công trình", value: project.siteName || EMPTY_VALUE },
     { key: "code", label: "Mã số", value: project.code || EMPTY_VALUE },
+    { key: "desc", label: "Mô tả", value: project.desc || EMPTY_VALUE, multiline: true },
   ];
 
   return (
     <Card
       title={
-        <div>
-          <Title level={isMobile ? 5 : 4} style={{ margin: 0 }}>
-            Tổng quan dự án
-          </Title>
-          <Text type="secondary" style={{ fontSize: 13 }}>
-            {project.name || "Chưa đặt tên dự án"}
-          </Text>
-        </div>
+        <Title level={isMobile ? 5 : 4} style={{ margin: 0 }}>
+          Tổng quan dự án
+        </Title>
       }
       style={sectionCardStyle}
       styles={sectionCardStyles}
     >
-      <Row gutter={[12, 12]}>
+      <Space direction="vertical" size={10} style={{ width: "100%" }}>
         {fields.map((field) => (
-          <Col xs={24} sm={12} key={field.key}>
-            <div style={fieldChipStyle}>
-              <Text type="secondary" style={{ display: "block", fontSize: 12, marginBottom: 6 }}>
-                {field.label}
+          <div
+            key={field.key}
+            style={{
+              ...fieldChipStyle,
+              display: "flex",
+              flexDirection: isMobile || field.multiline ? "column" : "row",
+              alignItems: isMobile || field.multiline ? "stretch" : "center",
+              gap: isMobile || field.multiline ? 6 : 16,
+              justifyContent: "space-between",
+            }}
+          >
+            <Text type="secondary" style={{ fontSize: 12, fontWeight: 500, minWidth: 120 }}>
+              {field.label}
+            </Text>
+            {field.node || (
+              <Text
+                strong={!field.multiline}
+                style={{
+                  wordBreak: "break-word",
+                  whiteSpace: field.multiline ? "pre-wrap" : "normal",
+                  textAlign: isMobile || field.multiline ? "left" : "right",
+                  flex: 1,
+                }}
+              >
+                {field.value}
               </Text>
-              {field.node || (
-                <Text strong style={{ wordBreak: "break-word" }}>
-                  {field.value}
-                </Text>
-              )}
-            </div>
-          </Col>
-        ))}
-        <Col span={24}>
-          <div style={{ ...fieldChipStyle, minHeight: isMobile ? undefined : 96 }}>
-            <Text type="secondary" style={{ display: "block", fontSize: 12, marginBottom: 6 }}>
-              Mô tả
-            </Text>
-            <Text style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-              {project.desc || EMPTY_VALUE}
-            </Text>
+            )}
           </div>
-        </Col>
-      </Row>
+        ))}
+      </Space>
     </Card>
   );
 }

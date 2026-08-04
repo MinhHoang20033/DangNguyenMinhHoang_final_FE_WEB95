@@ -28,3 +28,19 @@ export const fieldChipStyle = {
   border: "1px solid #eef2f7",
   padding: "10px 12px",
 };
+
+/** Scroll area so long lists don't stretch the whole page */
+export const createScrollBoxStyle = (maxHeight) => ({
+  maxHeight,
+  overflowY: "auto",
+  overflowX: "hidden",
+  paddingRight: 4,
+  WebkitOverflowScrolling: "touch",
+});
+
+export const SECTION_SCROLL = {
+  members: 360,
+  tasks: 560,
+  progress: 480,
+  files: 420,
+};
