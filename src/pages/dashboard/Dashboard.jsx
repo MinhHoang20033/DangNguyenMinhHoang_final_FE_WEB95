@@ -1,9 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
+  Alert,
   Avatar,
+  Button,
   Card,
   Col,
   Empty,
+  Grid,
   List,
   Progress,
   Row,
@@ -13,19 +17,33 @@ import {
   Typography,
 } from "antd";
 import {
+  ArrowRightOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
   ProjectOutlined,
+  ShopOutlined,
   TeamOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
-import { getEmployees, getProjects } from "@/utils/api";
-import { getProjectStatusPresentation, isProjectOverdue } from "@/features/project";
+import dayjs from "dayjs";
+
+import { AuthContext } from "@/context/AuthContextValue";
+import { getProjectStatusPresentation } from "@/features/project";
+import { getEmployees, getPartners, getProjects } from "@/utils/api";
+import {
+  ROLE_LABELS,
+  computeDashboardData,
+  getGreeting,
+  getDeadlineDayjs,
+  getProgressStrokeColor,
+  getTaskProgress,
+} from "./dashboardHelpers.js";
 
 const { Title, Text } = Typography;
+
 const PROJECT_PROGRESS_BATCH_SIZE = 5;
 const PROJECT_MEMBER_BATCH_SIZE = 6;
 const UNASSIGNED_MEMBER_BATCH_SIZE = 6;
-const RECENT_PROJECTS_COUNT = 6;
 
 const surfaceStyle = {
   borderRadius: 24,
@@ -35,20 +53,26 @@ const surfaceStyle = {
 
 const statCards = [
   {
+    key: "totalProjects",
+    title: "Tổng dự án",
+    color: "#0f766e",
+    icon: <ProjectOutlined style={{ color: "#0f766e" }} />,
+  },
+  {
     key: "activeProjects",
-    title: "Dự án đang triển khai",
+    title: "Đang triển khai",
     color: "#2563eb",
     icon: <ProjectOutlined style={{ color: "#2563eb" }} />,
   },
   {
     key: "overdueProjects",
-    title: "Dự án trễ hạn",
+    title: "Trễ hạn",
     color: "#dc2626",
-    icon: <ClockCircleOutlined style={{ color: "#dc2626" }} />,
+    icon: <WarningOutlined style={{ color: "#dc2626" }} />,
   },
   {
     key: "completedProjects",
-    title: "Dự án đã hoàn thành",
+    title: "Đã hoàn thành",
     color: "#16a34a",
     icon: <CheckCircleOutlined style={{ color: "#16a34a" }} />,
   },
@@ -60,38 +84,15 @@ const statCards = [
   },
   {
     key: "pendingTasks",
-    title: "Task chưa hoàn thành",
+    title: "Task chưa xong",
     color: "#ea580c",
     icon: <ClockCircleOutlined style={{ color: "#ea580c" }} />,
   },
 ];
 
-const getProjectCreatedAt = (project) => {
-  const objectIdPrefix = project?._id?.toString?.().slice(0, 8);
-  if (!objectIdPrefix) return 0;
-
-  return parseInt(objectIdPrefix, 16) * 1000;
-};
-
-const getTaskProgress = (project) => {
-  const totalTasks = project.tasks?.length ?? 0;
-  const completedTasks = (project.tasks ?? []).filter((task) => task.completed).length;
-  const pendingTasks = totalTasks - completedTasks;
-  const percent = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-  return { totalTasks, completedTasks, pendingTasks, percent };
-};
-
-const getProgressStrokeColor = (project) => {
-  const { tagColor } = getProjectStatusPresentation(project);
-  if (tagColor === "red") return "#dc2626";
-  if (tagColor === "default") return "#16a34a";
-  return "#2563eb";
-};
-
-function StatCard({ title, value, color, icon, loading }) {
+function StatCard({ title, value, suffix, color, icon, loading }) {
   return (
-    <Card loading={loading} style={{ ...surfaceStyle, height: "100%" }} bodyStyle={{ padding: 22 }}>
+    <Card loading={loading} style={{ ...surfaceStyle, height: "100%" }} styles={{ body: { padding: 22 } }}>
       <Space direction="vertical" size={10} style={{ width: "100%" }}>
         <Space size={12}>
           <div
@@ -110,7 +111,11 @@ function StatCard({ title, value, color, icon, loading }) {
           </div>
           <Text type="secondary">{title}</Text>
         </Space>
-        <Statistic value={value} valueStyle={{ color: "#0f172a", fontSize: 30, fontWeight: 700 }} />
+        <Statistic
+          value={value}
+          suffix={suffix}
+          valueStyle={{ color: "#0f172a", fontSize: 30, fontWeight: 700 }}
+        />
       </Space>
     </Card>
   );
@@ -123,32 +128,169 @@ function SectionCard({ title, extra, children, loading }) {
       extra={extra}
       loading={loading}
       style={{ ...surfaceStyle, height: "100%" }}
-      bodyStyle={{ padding: 22 }}
-      headStyle={{ borderBottom: "1px solid #e2e8f0" }}
+      styles={{
+        body: { padding: 22 },
+        header: { borderBottom: "1px solid #e2e8f0" },
+      }}
     >
       {children}
     </Card>
   );
 }
 
+function StatusDistribution({ statusCounts, totalProjects }) {
+  if (!totalProjects) {
+    return <Empty description="Chưa có dự án" />;
+  }
+
+  const segments = [
+    { key: "inProgress", label: "Đang triển khai", value: statusCounts.inProgress, color: "#2563eb" },
+    { key: "overdue", label: "Trễ hạn", value: statusCounts.overdue, color: "#dc2626" },
+    { key: "completed", label: "Hoàn thành", value: statusCounts.completed, color: "#16a34a" },
+  ];
+
+  return (
+    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      <div
+        style={{
+          display: "flex",
+          height: 14,
+          borderRadius: 999,
+          overflow: "hidden",
+          background: "#e5e7eb",
+        }}
+      >
+        {segments.map((segment) =>
+          segment.value > 0 ? (
+            <div
+              key={segment.key}
+              title={`${segment.label}: ${segment.value}`}
+              style={{
+                width: `${(segment.value / totalProjects) * 100}%`,
+                background: segment.color,
+                minWidth: segment.value > 0 ? 8 : 0,
+              }}
+            />
+          ) : null,
+        )}
+      </div>
+
+      <Row gutter={[12, 12]}>
+        {segments.map((segment) => (
+          <Col key={segment.key} xs={24} sm={8}>
+            <div
+              style={{
+                borderRadius: 16,
+                border: "1px solid #e2e8f0",
+                padding: "12px 14px",
+                background: "#f8fafc",
+              }}
+            >
+              <Space align="center">
+                <span
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: "50%",
+                    background: segment.color,
+                    display: "inline-block",
+                  }}
+                />
+                <div>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    {segment.label}
+                  </Text>
+                  <div>
+                    <Text strong style={{ fontSize: 18 }}>
+                      {segment.value}
+                    </Text>
+                    <Text type="secondary" style={{ marginLeft: 6, fontSize: 12 }}>
+                      ({totalProjects ? Math.round((segment.value / totalProjects) * 100) : 0}%)
+                    </Text>
+                  </div>
+                </div>
+              </Space>
+            </div>
+          </Col>
+        ))}
+      </Row>
+    </Space>
+  );
+}
+
+function ProjectLinkRow({ project, navigate, extra }) {
+  const statusPresentation = getProjectStatusPresentation(project);
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => navigate(`/projects/${project._id}`)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          navigate(`/projects/${project._id}`);
+        }
+      }}
+      style={{
+        borderRadius: 16,
+        border: "1px solid #e2e8f0",
+        padding: "12px 14px",
+        background: "#fff",
+        cursor: "pointer",
+        transition: "box-shadow 0.2s ease, transform 0.2s ease",
+      }}
+      onMouseEnter={(event) => {
+        event.currentTarget.style.boxShadow = "0 8px 20px rgba(15, 23, 42, 0.08)";
+        event.currentTarget.style.transform = "translateY(-1px)";
+      }}
+      onMouseLeave={(event) => {
+        event.currentTarget.style.boxShadow = "none";
+        event.currentTarget.style.transform = "none";
+      }}
+    >
+      <Row justify="space-between" align="middle" wrap={false} gutter={12}>
+        <Col flex="auto" style={{ minWidth: 0 }}>
+          <Text strong ellipsis style={{ display: "block" }}>
+            {project.name || "Dự án chưa đặt tên"}
+          </Text>
+          {extra}
+        </Col>
+        <Col>
+          <Tag color={statusPresentation.tagColor}>{statusPresentation.label}</Tag>
+        </Col>
+      </Row>
+    </div>
+  );
+}
+
 export default function Dashboard() {
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
+
   const [projects, setProjects] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [partnerTotal, setPartnerTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [visibleProjectCount, setVisibleProjectCount] = useState(PROJECT_PROGRESS_BATCH_SIZE);
   const [visibleMemberProjectCount, setVisibleMemberProjectCount] = useState(PROJECT_MEMBER_BATCH_SIZE);
-  const [visibleUnassignedMemberCount, setVisibleUnassignedMemberCount] = useState(UNASSIGNED_MEMBER_BATCH_SIZE);
+  const [visibleUnassignedMemberCount, setVisibleUnassignedMemberCount] = useState(
+    UNASSIGNED_MEMBER_BATCH_SIZE,
+  );
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [projectData, employeeData] = await Promise.all([
+        const [projectData, employeeData, partnerData] = await Promise.all([
           getProjects(),
           getEmployees({ all: true }),
+          getPartners({ limit: 1 }).catch(() => ({ total: 0 })),
         ]);
         setProjects(projectData ?? []);
         setEmployees(employeeData ?? []);
+        setPartnerTotal(partnerData?.total ?? 0);
       } finally {
         setLoading(false);
       }
@@ -157,78 +299,10 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
-  const dashboardData = useMemo(() => {
-    const completedProjects = projects.filter((project) => project.status !== "active");
-    const overdueProjects = projects.filter(
-      (project) => project.status === "active" && isProjectOverdue(project),
-    );
-    const inProgressProjects = projects.filter(
-      (project) => project.status === "active" && !isProjectOverdue(project),
-    );
-    const pendingTasks = projects.reduce(
-      (sum, project) => sum + (project.tasks ?? []).filter((task) => !task.completed).length,
-      0,
-    );
-
-    const recentProjects = [...projects]
-      .sort((left, right) => getProjectCreatedAt(right) - getProjectCreatedAt(left))
-      .slice(0, RECENT_PROJECTS_COUNT);
-
-    const projectsByTasks = [...projects]
-      .sort((left, right) => (right.tasks?.length ?? 0) - (left.tasks?.length ?? 0))
-      .map((project) => ({
-        ...project,
-        progress: getTaskProgress(project),
-      }));
-
-    const projectsByMembers = [...projects].sort(
-      (left, right) => (right.members?.length ?? 0) - (left.members?.length ?? 0),
-    );
-
-    const memberTaskMap = employees.reduce((accumulator, employee) => {
-      accumulator[employee._id] = {
-        employee,
-        total: 0,
-        projectNames: new Set(),
-      };
-      return accumulator;
-    }, {});
-
-    projects.forEach((project) => {
-      (project.members ?? []).forEach((member) => {
-        if (memberTaskMap[member.employeeId]) {
-          memberTaskMap[member.employeeId].projectNames.add(
-            project.name || "Dự án chưa đặt tên",
-          );
-        }
-      });
-
-      (project.tasks ?? []).forEach((task) => {
-        (task.assigneeIds ?? []).forEach((employeeId) => {
-          if (memberTaskMap[employeeId]) {
-            memberTaskMap[employeeId].total += 1;
-          }
-        });
-      });
-    });
-
-    const unassignedProjectMembers = Object.values(memberTaskMap)
-      .filter((item) => item.projectNames.size > 0 && item.total === 0)
-      .sort((left, right) =>
-        (left.employee.name || "").localeCompare(right.employee.name || "", "vi"),
-      );
-
-    return {
-      inProgressProjects,
-      overdueProjects,
-      completedProjects,
-      pendingTasks,
-      recentProjects,
-      projectsByTasks,
-      projectsByMembers,
-      unassignedProjectMembers,
-    };
-  }, [employees, projects]);
+  const dashboardData = useMemo(
+    () => computeDashboardData(projects, employees),
+    [employees, projects],
+  );
 
   useEffect(() => {
     setVisibleProjectCount(PROJECT_PROGRESS_BATCH_SIZE);
@@ -243,6 +317,7 @@ export default function Dashboard() {
   }, [dashboardData.unassignedProjectMembers.length]);
 
   const statValues = {
+    totalProjects: dashboardData.totalProjects,
     activeProjects: dashboardData.inProgressProjects.length,
     overdueProjects: dashboardData.overdueProjects.length,
     completedProjects: dashboardData.completedProjects.length,
@@ -296,6 +371,9 @@ export default function Dashboard() {
     );
   };
 
+  const displayName = user?.username || "Admin";
+  const roleLabel = ROLE_LABELS[user?.role] || user?.role || "Quản trị";
+
   return (
     <Space direction="vertical" size={24} style={{ width: "100%" }}>
       <Card
@@ -305,33 +383,52 @@ export default function Dashboard() {
           background:
             "radial-gradient(circle at top left, rgba(59, 130, 246, 0.22), transparent 30%), linear-gradient(135deg, #f8fbff 0%, #eef6ff 45%, #f8fffc 100%)",
         }}
-        bodyStyle={{ padding: 28 }}
+        styles={{ body: { padding: isMobile ? 20 : 28 } }}
       >
-        <Space direction="vertical" size={8}>
-          <Tag
-            color="blue"
-            style={{
-              width: "fit-content",
-              borderRadius: 999,
-              paddingInline: 12,
-              paddingBlock: 4,
-              fontSize: 13,
-            }}
-          >
-            Trung tâm điều hành dự án
-          </Tag>
-          <Title level={2} style={{ margin: 0 }}>
-            Dashboard tổng quan dự án và nhân sự
-          </Title>
-          <Text type="secondary" style={{ fontSize: 15 }}>
-            Theo dõi nhanh tình trạng dự án, tiến độ task và những nhân sự đang tham gia.
-          </Text>
-        </Space>
+        <Row gutter={[20, 20]} align="middle" justify="space-between">
+          <Col xs={24} lg={14}>
+            <Space direction="vertical" size={8}>
+              <Tag
+                color="blue"
+                style={{
+                  width: "fit-content",
+                  borderRadius: 999,
+                  paddingInline: 12,
+                  paddingBlock: 4,
+                  fontSize: 13,
+                }}
+              >
+                {roleLabel}
+              </Tag>
+              <Title level={isMobile ? 3 : 2} style={{ margin: 0 }}>
+                {getGreeting()}, {displayName}
+              </Title>
+              <Text type="secondary" style={{ fontSize: 15 }}>
+                Tổng quan hệ thống ngày {dayjs().format("DD/MM/YYYY")} — {dashboardData.totalProjects}{" "}
+                dự án, {dashboardData.totalTasks} task, {partnerTotal} đối tác.
+              </Text>
+            </Space>
+          </Col>
+
+          <Col xs={24} lg={10}>
+            <Space wrap style={{ width: "100%", justifyContent: isMobile ? "flex-start" : "flex-end" }}>
+              <Button type="primary" icon={<ProjectOutlined />} onClick={() => navigate("/projects")}>
+                Quản lý dự án
+              </Button>
+              <Button icon={<TeamOutlined />} onClick={() => navigate("/employees")}>
+                Nhân sự
+              </Button>
+              <Button icon={<ShopOutlined />} onClick={() => navigate("/partners")}>
+                Đối tác
+              </Button>
+            </Space>
+          </Col>
+        </Row>
       </Card>
 
       <Row gutter={[20, 20]}>
         {statCards.map((item) => (
-          <Col key={item.key} xs={24} sm={12} lg={8} xl={6}>
+          <Col key={item.key} xs={24} sm={12} lg={8} xl={4}>
             <StatCard
               title={item.title}
               value={statValues[item.key]}
@@ -344,10 +441,167 @@ export default function Dashboard() {
       </Row>
 
       <Row gutter={[20, 20]}>
+        <Col xs={24} xl={14}>
+          <SectionCard title="Phân bổ trạng thái dự án" loading={loading}>
+            <StatusDistribution
+              statusCounts={dashboardData.statusCounts}
+              totalProjects={dashboardData.totalProjects}
+            />
+          </SectionCard>
+        </Col>
+
+        <Col xs={24} xl={10}>
+          <SectionCard title="Tiến độ task toàn hệ thống" loading={loading}>
+            <Row gutter={[20, 20]} align="middle">
+              <Col xs={24} sm={12} style={{ textAlign: "center" }}>
+                <Progress
+                  type="dashboard"
+                  percent={dashboardData.taskCompletionRate}
+                  strokeColor={{
+                    "0%": "#2563eb",
+                    "100%": "#16a34a",
+                  }}
+                  size={isMobile ? 140 : 168}
+                />
+              </Col>
+              <Col xs={24} sm={12}>
+                <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                  <div
+                    style={{
+                      borderRadius: 16,
+                      padding: "12px 14px",
+                      background: "#eff6ff",
+                      border: "1px solid #dbeafe",
+                    }}
+                  >
+                    <Text type="secondary">Đã hoàn thành</Text>
+                    <div>
+                      <Text strong style={{ fontSize: 22, color: "#16a34a" }}>
+                        {dashboardData.completedTasks}
+                      </Text>
+                      <Text type="secondary"> / {dashboardData.totalTasks} task</Text>
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      borderRadius: 16,
+                      padding: "12px 14px",
+                      background: "#fff7ed",
+                      border: "1px solid #ffedd5",
+                    }}
+                  >
+                    <Text type="secondary">Chưa hoàn thành</Text>
+                    <div>
+                      <Text strong style={{ fontSize: 22, color: "#ea580c" }}>
+                        {dashboardData.pendingTasks}
+                      </Text>
+                      <Text type="secondary"> task đang chờ</Text>
+                    </div>
+                  </div>
+                </Space>
+              </Col>
+            </Row>
+          </SectionCard>
+        </Col>
+      </Row>
+
+      <Row gutter={[20, 20]}>
+        <Col xs={24} lg={12}>
+          <SectionCard
+            title="Dự án trễ hạn"
+            extra={
+              dashboardData.overdueProjects.length ? (
+                <Tag color="red">{dashboardData.overdueProjects.length}</Tag>
+              ) : null
+            }
+            loading={loading}
+          >
+            {dashboardData.overdueProjects.length ? (
+              <Space direction="vertical" size={10} style={{ width: "100%" }}>
+                {dashboardData.overdueProjects.slice(0, 5).map((project) => {
+                  const deadline = getDeadlineDayjs(project.deadline);
+                  return (
+                    <ProjectLinkRow
+                      key={project._id}
+                      project={project}
+                      navigate={navigate}
+                      extra={
+                        <Text type="danger" style={{ fontSize: 12 }}>
+                          Deadline: {deadline ? deadline.format("DD/MM/YYYY") : "Chưa có"}
+                        </Text>
+                      }
+                    />
+                  );
+                })}
+                {dashboardData.overdueProjects.length > 5 ? (
+                  <Button type="link" onClick={() => navigate("/projects")} icon={<ArrowRightOutlined />}>
+                    Xem tất cả dự án
+                  </Button>
+                ) : null}
+              </Space>
+            ) : (
+              <Alert
+                type="success"
+                showIcon
+                message="Không có dự án trễ hạn"
+                description="Tất cả dự án đang triển khai đều trong thời hạn."
+              />
+            )}
+          </SectionCard>
+        </Col>
+
+        <Col xs={24} lg={12}>
+          <SectionCard
+            title="Deadline trong 7 ngày tới"
+            extra={
+              dashboardData.upcomingDeadlineProjects.length ? (
+                <Tag color="orange">{dashboardData.upcomingDeadlineProjects.length}</Tag>
+              ) : null
+            }
+            loading={loading}
+          >
+            {dashboardData.upcomingDeadlineProjects.length ? (
+              <Space direction="vertical" size={10} style={{ width: "100%" }}>
+                {dashboardData.upcomingDeadlineProjects.slice(0, 5).map((project) => {
+                  const deadline = getDeadlineDayjs(project.deadline);
+                  const daysLeft = deadline.startOf("day").diff(dayjs().startOf("day"), "day");
+                  return (
+                    <ProjectLinkRow
+                      key={project._id}
+                      project={project}
+                      navigate={navigate}
+                      extra={
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          Còn {daysLeft} ngày · {deadline.format("DD/MM/YYYY")}
+                        </Text>
+                      }
+                    />
+                  );
+                })}
+              </Space>
+            ) : (
+              <Alert
+                type="info"
+                showIcon
+                message="Không có deadline sắp tới"
+                description="Không có dự án nào đến hạn trong 7 ngày tới."
+              />
+            )}
+          </SectionCard>
+        </Col>
+      </Row>
+
+      <Row gutter={[20, 20]}>
         <Col xs={24}>
           <SectionCard
             title="Tiến độ theo dự án"
-            extra={<Text type="secondary">Toàn bộ dự án</Text>}
+            extra={
+              <Link to="/projects">
+                <Button type="link" size="small" icon={<ArrowRightOutlined />}>
+                  Xem tất cả
+                </Button>
+              </Link>
+            }
             loading={loading}
           >
             {dashboardData.projectsByTasks.length ? (
@@ -360,7 +614,18 @@ export default function Dashboard() {
                     const statusPresentation = getProjectStatusPresentation(project);
 
                     return (
-                      <div key={project._id}>
+                      <div
+                        key={project._id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => navigate(`/projects/${project._id}`)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            navigate(`/projects/${project._id}`);
+                          }
+                        }}
+                        style={{ cursor: "pointer" }}
+                      >
                         <Row justify="space-between" align="middle" style={{ marginBottom: 8 }}>
                           <Col>
                             <Text strong>{project.name || "Dự án chưa đặt tên"}</Text>
@@ -374,11 +639,9 @@ export default function Dashboard() {
                           strokeColor={getProgressStrokeColor(project)}
                           trailColor="#e5e7eb"
                         />
-                        <Row justify="space-between">
-                          <Text type="secondary">
-                            Hoàn thành {project.progress.completedTasks}/{project.progress.totalTasks} task
-                          </Text>
-                        </Row>
+                        <Text type="secondary">
+                          Hoàn thành {project.progress.completedTasks}/{project.progress.totalTasks} task
+                        </Text>
                       </div>
                     );
                   })}
@@ -393,7 +656,42 @@ export default function Dashboard() {
 
       <Row gutter={[20, 20]}>
         <Col xs={24} xl={12}>
-          <SectionCard title="Nhân sự đang tham gia dự án nhưng chưa được giao task" loading={loading}>
+          <SectionCard title="Nhân sự có nhiều task đang chờ" loading={loading}>
+            {dashboardData.topEmployeesByTasks.length ? (
+              <List
+                itemLayout="horizontal"
+                dataSource={dashboardData.topEmployeesByTasks}
+                renderItem={({ employee, total, pending }) => (
+                  <List.Item
+                    extra={
+                      <Space direction="vertical" size={0} style={{ textAlign: "right" }}>
+                        <Tag color="orange">{pending} chưa xong</Tag>
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          {total} task tổng
+                        </Text>
+                      </Space>
+                    }
+                  >
+                    <List.Item.Meta
+                      avatar={
+                        <Avatar src={employee.avatar || undefined}>
+                          {(employee.name || "N").trim().charAt(0).toUpperCase()}
+                        </Avatar>
+                      }
+                      title={employee.name || "Nhân viên"}
+                      description={employee.role || employee.employeeCode || "----"}
+                    />
+                  </List.Item>
+                )}
+              />
+            ) : (
+              <Empty description="Chưa có nhân sự được giao task" />
+            )}
+          </SectionCard>
+        </Col>
+
+        <Col xs={24} xl={12}>
+          <SectionCard title="Nhân sự trong dự án nhưng chưa có task" loading={loading}>
             {dashboardData.unassignedProjectMembers.length ? (
               <div
                 style={{ maxHeight: 420, overflowY: "auto", paddingRight: 8 }}
@@ -412,13 +710,10 @@ export default function Dashboard() {
                         }
                         title={employee.name || "Nhân viên"}
                         description={
-                          <Space wrap>
-                            <Text type="secondary">Đang tham gia dự án</Text>
-                            <Text type="secondary">
-                              {Array.from(projectNames).slice(0, 2).join(", ")}
-                              {projectNames.size > 2 ? "..." : ""}
-                            </Text>
-                          </Space>
+                          <Text type="secondary">
+                            {Array.from(projectNames).slice(0, 2).join(", ")}
+                            {projectNames.size > 2 ? "..." : ""}
+                          </Text>
                         }
                       />
                       <Tag color="orange">Chưa có task</Tag>
@@ -431,7 +726,9 @@ export default function Dashboard() {
             )}
           </SectionCard>
         </Col>
+      </Row>
 
+      <Row gutter={[20, 20]}>
         <Col xs={24} xl={12}>
           <SectionCard title="Dự án có nhiều thành viên" loading={loading}>
             {dashboardData.projectsByMembers.length ? (
@@ -439,31 +736,18 @@ export default function Dashboard() {
                 style={{ maxHeight: 420, overflowY: "auto", paddingRight: 8 }}
                 onScroll={handleProjectMembersScroll}
               >
-                <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                <Space direction="vertical" size={12} style={{ width: "100%" }}>
                   {visibleProjectsByMembers.map((project) => (
-                    <Card
+                    <ProjectLinkRow
                       key={project._id}
-                      size="small"
-                      bordered={false}
-                      style={{ borderRadius: 18, background: "#f8fafc" }}
-                      bodyStyle={{ padding: 16 }}
-                    >
-                      <Row justify="space-between" align="middle">
-                        <Col flex="auto">
-                          <Text strong>{project.name || "Dự án chưa đặt tên"}</Text>
-                          <div>
-                            <Text type="secondary">
-                              {(project.members?.length ?? 0)} thành viên tham gia
-                            </Text>
-                          </div>
-                        </Col>
-                        <Col>
-                          <Tag color={getProjectStatusPresentation(project).tagColor}>
-                            {getProjectStatusPresentation(project).label}
-                          </Tag>
-                        </Col>
-                      </Row>
-                    </Card>
+                      project={project}
+                      navigate={navigate}
+                      extra={
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          {(project.members?.length ?? 0)} thành viên tham gia
+                        </Text>
+                      }
+                    />
                   ))}
                 </Space>
               </div>
@@ -472,50 +756,54 @@ export default function Dashboard() {
             )}
           </SectionCard>
         </Col>
+
+        <Col xs={24} xl={12}>
+          <SectionCard title="Dự án mới tạo gần đây" loading={loading}>
+            {dashboardData.recentProjects.length ? (
+              <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                {dashboardData.recentProjects.map((project) => {
+                  const progress = getTaskProgress(project);
+
+                  return (
+                    <Card
+                      key={project._id}
+                      size="small"
+                      hoverable
+                      onClick={() => navigate(`/projects/${project._id}`)}
+                      style={{
+                        borderRadius: 18,
+                        border: "1px solid #e2e8f0",
+                        background: "#ffffff",
+                      }}
+                      styles={{ body: { padding: 16 } }}
+                    >
+                      <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                        <Row justify="space-between" align="middle">
+                          <Text strong>{project.name || "Dự án chưa đặt tên"}</Text>
+                          <Tag color={getProjectStatusPresentation(project).tagColor}>
+                            {getProjectStatusPresentation(project).label}
+                          </Tag>
+                        </Row>
+                        <Text type="secondary">
+                          {project.members?.length ?? 0} thành viên · {progress.totalTasks} task
+                        </Text>
+                        <Progress
+                          percent={progress.percent}
+                          strokeColor={getProgressStrokeColor(project)}
+                          trailColor="#e5e7eb"
+                          size="small"
+                        />
+                      </Space>
+                    </Card>
+                  );
+                })}
+              </Space>
+            ) : (
+              <Empty description="Chưa có dự án gần đây" />
+            )}
+          </SectionCard>
+        </Col>
       </Row>
-
-      <SectionCard title="Dự án mới tạo gần đây" loading={loading}>
-        {dashboardData.recentProjects.length ? (
-          <Row gutter={[16, 16]}>
-            {dashboardData.recentProjects.map((project) => {
-              const progress = getTaskProgress(project);
-              const statusPresentation = getProjectStatusPresentation(project);
-
-              return (
-                <Col key={project._id} xs={24} md={12} xl={8}>
-                  <Card
-                    size="small"
-                    style={{
-                      height: "100%",
-                      borderRadius: 20,
-                      border: "1px solid #e2e8f0",
-                      background: "#ffffff",
-                    }}
-                    bodyStyle={{ padding: 18 }}
-                  >
-                    <Space direction="vertical" size={10} style={{ width: "100%" }}>
-                      <Row justify="space-between" align="middle">
-                        <Text strong>{project.name || "Dự án chưa đặt tên"}</Text>
-                        <Tag color={statusPresentation.tagColor}>{statusPresentation.label}</Tag>
-                      </Row>
-                      <Text type="secondary">
-                        {project.members?.length ?? 0} thành viên • {progress.totalTasks} task
-                      </Text>
-                      <Progress
-                        percent={progress.percent}
-                        strokeColor={getProgressStrokeColor(project)}
-                        trailColor="#e5e7eb"
-                      />
-                    </Space>
-                  </Card>
-                </Col>
-              );
-            })}
-          </Row>
-        ) : (
-          <Empty description="Chưa có dự án gần đây" />
-        )}
-      </SectionCard>
     </Space>
   );
 }
