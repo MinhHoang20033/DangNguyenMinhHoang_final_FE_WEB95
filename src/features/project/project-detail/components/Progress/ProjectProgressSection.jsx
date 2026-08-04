@@ -18,15 +18,14 @@ const { Text, Title } = Typography;
 
 const PROGRESS_SUBTITLE_PLACEHOLDER = "Kế hoạch và báo cáo tiến độ thi công dự án";
 
-const cardShellStyle = {
-  borderRadius: 18,
-  border: "1px solid #e2e8f0",
-  background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-  boxShadow: "0 10px 28px rgba(15, 23, 42, 0.06)",
-  height: "100%",
+const cellBase = {
+  borderRight: "1px solid #e2e8f0",
+  padding: "12px 14px",
+  minWidth: 160,
+  background: "#fff",
 };
 
-function ProgressCards({
+function ProgressExcelLayout({
   columns,
   rows,
   canManageTasks,
@@ -39,118 +38,137 @@ function ProgressCards({
     return <Empty description="Chưa có dòng tiến độ" />;
   }
 
-  const primaryColumn = columns[0];
-  const detailColumns = columns.slice(primaryColumn ? 1 : 0);
+  const actionWidth = canManageTasks ? (isMobile ? 150 : 180) : 0;
+  const indexWidth = 56;
+  const minTableWidth =
+    indexWidth + columns.length * 180 + actionWidth + (canManageTasks ? 0 : 0);
 
   return (
-    <Row gutter={[16, 16]}>
-      {rows.map((row, rowIndex) => {
-        const primaryValue = primaryColumn
-          ? row.values?.[primaryColumn.id] || EMPTY_VALUE
-          : `Dòng ${rowIndex + 1}`;
+    <div
+      style={{
+        border: "1px solid #dbe4f0",
+        borderRadius: 16,
+        overflow: "hidden",
+        background: "#fff",
+        boxShadow: "0 10px 28px rgba(15, 23, 42, 0.05)",
+      }}
+    >
+      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div style={{ minWidth: Math.max(minTableWidth, isMobile ? 720 : 960) }}>
+          {/* Header */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: `${indexWidth}px repeat(${columns.length}, minmax(180px, 1fr))${
+                canManageTasks ? ` ${actionWidth}px` : ""
+              }`,
+              background: "linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%)",
+              borderBottom: "1px solid #dbe4f0",
+            }}
+          >
+            <div
+              style={{
+                ...cellBase,
+                background: "transparent",
+                fontWeight: 700,
+                color: "#334155",
+                textAlign: "center",
+                minWidth: indexWidth,
+              }}
+            >
+              #
+            </div>
+            {columns.map((column) => (
+              <div
+                key={`head-${column.id}`}
+                style={{
+                  ...cellBase,
+                  background: "transparent",
+                  fontWeight: 700,
+                  color: "#1e293b",
+                }}
+              >
+                {column.name || "Tham số"}
+              </div>
+            ))}
+            {canManageTasks && (
+              <div
+                style={{
+                  ...cellBase,
+                  borderRight: "none",
+                  background: "transparent",
+                  fontWeight: 700,
+                  color: "#334155",
+                  minWidth: actionWidth,
+                }}
+              >
+                Thao tác
+              </div>
+            )}
+          </div>
 
-        return (
-          <Col xs={24} lg={12} key={row.id}>
-            <Card size="small" style={cardShellStyle} styles={{ body: { padding: isMobile ? 14 : 18 } }}>
-              <Space direction="vertical" size={isMobile ? 12 : 16} style={{ width: "100%" }}>
+          {/* Rows */}
+          {rows.map((row, rowIndex) => (
+            <div
+              key={row.id}
+              style={{
+                display: "grid",
+                gridTemplateColumns: `${indexWidth}px repeat(${columns.length}, minmax(180px, 1fr))${
+                  canManageTasks ? ` ${actionWidth}px` : ""
+                }`,
+                borderBottom: rowIndex === rows.length - 1 ? "none" : "1px solid #eef2f7",
+                background: rowIndex % 2 === 0 ? "#ffffff" : "#fbfdff",
+              }}
+            >
+              <div
+                style={{
+                  ...cellBase,
+                  minWidth: indexWidth,
+                  textAlign: "center",
+                  fontWeight: 700,
+                  color: "#2563eb",
+                  background: rowIndex % 2 === 0 ? "#f8fbff" : "#f1f6ff",
+                }}
+              >
+                {rowIndex + 1}
+              </div>
+
+              {columns.map((column) => (
+                <div
+                  key={`${row.id}-${column.id}`}
+                  style={{
+                    ...cellBase,
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                    lineHeight: 1.45,
+                    color: "#0f172a",
+                  }}
+                >
+                  {row.values?.[column.id] || EMPTY_VALUE}
+                </div>
+              ))}
+
+              {canManageTasks && (
                 <div
                   style={{
+                    ...cellBase,
+                    borderRight: "none",
+                    minWidth: actionWidth,
                     display: "flex",
-                    alignItems: "flex-start",
-                    justifyContent: "space-between",
-                    gap: 12,
+                    alignItems: "center",
                   }}
                 >
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <Text type="secondary" style={{ fontSize: 12, letterSpacing: 0.2 }}>
-                      Dòng {rowIndex + 1}
-                      {primaryColumn?.name ? ` · ${primaryColumn.name}` : ""}
-                    </Text>
-                    <Title
-                      level={isMobile ? 5 : 4}
-                      style={{
-                        margin: "6px 0 0",
-                        wordBreak: "break-word",
-                        lineHeight: 1.35,
-                      }}
-                    >
-                      {primaryValue}
-                    </Title>
-                  </div>
-                  <div
-                    style={{
-                      width: isMobile ? 36 : 44,
-                      height: isMobile ? 36 : 44,
-                      borderRadius: 14,
-                      background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
-                      color: "#1d4ed8",
-                      display: "grid",
-                      placeItems: "center",
-                      fontWeight: 700,
-                      fontSize: isMobile ? 14 : 16,
-                      flexShrink: 0,
-                      border: "1px solid #bfdbfe",
-                    }}
-                  >
-                    {rowIndex + 1}
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: isMobile
-                      ? "1fr"
-                      : detailColumns.length > 2
-                        ? "repeat(2, minmax(0, 1fr))"
-                        : "1fr",
-                    gap: 10,
-                  }}
-                >
-                  {detailColumns.map((column) => {
-                    const value = row.values?.[column.id];
-                    return (
-                      <div
-                        key={`${row.id}-${column.id}`}
-                        style={{
-                          borderRadius: 14,
-                          background: "#fff",
-                          border: "1px solid #eef2f7",
-                          padding: isMobile ? "10px 12px" : "12px 14px",
-                          minHeight: isMobile ? undefined : 84,
-                        }}
-                      >
-                        <Text
-                          type="secondary"
-                          style={{
-                            display: "block",
-                            fontSize: 12,
-                            marginBottom: 6,
-                            fontWeight: 500,
-                          }}
-                        >
-                          {column.name || "Tham số"}
-                        </Text>
-                        <Text style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                          {value || EMPTY_VALUE}
-                        </Text>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {canManageTasks && (
-                  <Space style={{ width: "100%" }} size="small">
+                  <Space size="small" wrap>
                     <Button
-                      block
-                      type="primary"
-                      ghost
+                      type="link"
+                      size="small"
                       onClick={() => openProgressRowEditor(row.id)}
                     >
                       Cập nhật
                     </Button>
                     <Button
-                      block
+                      type="link"
+                      size="small"
                       danger
                       onClick={() => removeProgressRow(row.id)}
                       loading={saving}
@@ -158,13 +176,13 @@ function ProgressCards({
                       Xóa
                     </Button>
                   </Space>
-                )}
-              </Space>
-            </Card>
-          </Col>
-        );
-      })}
-    </Row>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -272,7 +290,7 @@ export function ProjectProgressSection() {
               </Text>
             )}
 
-            <ProgressCards
+            <ProgressExcelLayout
               columns={progressSection.columns ?? []}
               rows={progressSection.rows ?? []}
               canManageTasks={canManageTasks}
