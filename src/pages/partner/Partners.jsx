@@ -400,51 +400,22 @@ export default function Partners() {
         >
           <Form.Item
             name="name"
-            label={
-              <Space size={6}>
-                <UserOutlined />
-                Họ tên đối tác
-              </Space>
-            }
+            label="Họ tên đối tác"
             rules={[{ required: true, message: "Vui lòng nhập họ tên đối tác" }]}
           >
-            <Input prefix={<UserOutlined style={{ color: "#94a3b8" }} />} placeholder="Nhập họ tên" />
+            <Input placeholder="Nhập họ tên" />
           </Form.Item>
 
-          <Form.Item
-            name="company"
-            label={
-              <Space size={6}>
-                <BankOutlined />
-                Công ty của đối tác
-              </Space>
-            }
-          >
-            <Input prefix={<BankOutlined style={{ color: "#94a3b8" }} />} placeholder="Nhập công ty" />
+          <Form.Item name="company" label="Công ty của đối tác">
+            <Input placeholder="Nhập công ty" />
           </Form.Item>
 
-          <Form.Item
-            name="email"
-            label={
-              <Space size={6}>
-                <MailOutlined />
-                Mail đối tác
-              </Space>
-            }
-          >
-            <Input prefix={<MailOutlined style={{ color: "#94a3b8" }} />} placeholder="name@company.com" />
+          <Form.Item name="email" label="Mail đối tác">
+            <Input placeholder="name@company.com" />
           </Form.Item>
 
-          <Form.Item
-            name="phone"
-            label={
-              <Space size={6}>
-                <PhoneOutlined />
-                Số điện thoại đối tác
-              </Space>
-            }
-          >
-            <Input prefix={<PhoneOutlined style={{ color: "#94a3b8" }} />} placeholder="Nhập số điện thoại" />
+          <Form.Item name="phone" label="Số điện thoại đối tác">
+            <Input placeholder="Nhập số điện thoại" />
           </Form.Item>
         </Form>
       </Modal>
