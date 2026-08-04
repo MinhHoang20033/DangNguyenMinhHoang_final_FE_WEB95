@@ -37,15 +37,6 @@ export function TaskEditorModal({
         </div>
 
         <div>
-          <Text>Mô tả task</Text>
-          <Input.TextArea
-            rows={4}
-            value={taskEditor.description}
-            onChange={(event) => onChange({ description: event.target.value })}
-          />
-        </div>
-
-        <div>
           <Text>Deadline</Text>
           <DatePicker
             style={{ width: "100%" }}
@@ -58,6 +49,23 @@ export function TaskEditorModal({
             format="DD/MM/YYYY"
             placeholder="Chọn ngày (tuỳ chọn)"
             allowClear
+            placement="bottomLeft"
+            builtinPlacements={{
+              bottomLeft: {
+                points: ["tl", "bl"],
+                offset: [0, 4],
+                overflow: { adjustX: true, adjustY: false },
+              },
+            }}
+          />
+        </div>
+
+        <div>
+          <Text>Mô tả task</Text>
+          <Input.TextArea
+            rows={4}
+            value={taskEditor.description}
+            onChange={(event) => onChange({ description: event.target.value })}
           />
         </div>
 
