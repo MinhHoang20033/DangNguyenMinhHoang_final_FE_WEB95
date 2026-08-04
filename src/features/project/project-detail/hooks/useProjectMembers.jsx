@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DeleteOutlined } from "@ant-design/icons";
-import { Avatar, Button, Space } from "antd";
+import { Avatar, Button, Popconfirm, Space } from "antd";
 
 import { getEmployees } from "@/utils/api";
-import { confirmDeleteAction } from "@/utils/confirmDelete";
 import { EMPTY_VALUE } from "@/features/project";
 
 const PAGE_SIZE = 10;
@@ -169,14 +168,6 @@ export function useProjectMembers({ project, isAdmin, saving, saveProject, setEm
     );
   };
 
-  const confirmRemoveMember = (employee) => {
-    confirmDeleteAction({
-      title: "Xóa thành viên",
-      content: `Bạn có chắc muốn xóa «${employee.name || "thành viên này"}» khỏi dự án?`,
-      onOk: () => removeMember(employee._id),
-    });
-  };
-
   const employeeColumns = [
     {
       title: "Ảnh",
@@ -237,17 +228,14 @@ export function useProjectMembers({ project, isAdmin, saving, saveProject, setEm
       title: "Thao tác",
       render: (_, record) =>
         isAdmin ? (
-          <Space size="small" wrap>
-            <Button
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => confirmRemoveMember(record)}
-              loading={saving}
-            >
+          <Popconfirm
+            title="Xóa thành viên khỏi dự án?"
+            onConfirm={() => removeMember(record._id)}
+          >
+            <Button size="small" danger icon={<DeleteOutlined />} loading={saving}>
               Xóa
             </Button>
-          </Space>
+          </Popconfirm>
         ) : null,
       width: 220,
     },
@@ -271,7 +259,6 @@ export function useProjectMembers({ project, isAdmin, saving, saveProject, setEm
     setSelectedEmployeeIds,
     addingMembers,
     removeMember,
-    confirmRemoveMember,
     employeeColumns,
     memberColumns,
   };

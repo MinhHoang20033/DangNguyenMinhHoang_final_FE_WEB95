@@ -1,5 +1,5 @@
 import { DeleteOutlined, DownloadOutlined, EditOutlined, EyeOutlined } from "@ant-design/icons";
-import { Avatar, Button, Checkbox, Collapse, Space, Tag, Typography } from "antd";
+import { Avatar, Button, Checkbox, Collapse, Popconfirm, Space, Tag, Typography } from "antd";
 
 import { EMPTY_VALUE, TASK_EXCEL_ACCEPT } from "@/features/project";
 import {
@@ -23,10 +23,10 @@ export function TaskCardList({
   triggerTaskFilePicker,
   openSubtaskEditor,
   toggleSubtaskCompletion,
-  confirmRemoveSubtask,
   openTaskEditor,
   toggleTaskCompletion,
-  confirmRemoveTask,
+  removeTask,
+  removeSubtask,
   saving,
   uploadingTaskId,
   isMobile = false,
@@ -143,15 +143,16 @@ export function TaskCardList({
                     <Button size="small" icon={<EditOutlined />} onClick={() => openTaskEditor(task)}>
                       Sửa
                     </Button>
-                    <Button
-                      size="small"
-                      danger
-                      icon={<DeleteOutlined />}
-                      onClick={() => confirmRemoveTask(task.id, task.title)}
-                      loading={saving}
-                    >
-                      Xóa
-                    </Button>
+                    <Popconfirm title="Xóa task?" onConfirm={() => removeTask(task.id)}>
+                      <Button
+                        size="small"
+                        danger
+                        icon={<DeleteOutlined />}
+                        loading={saving}
+                      >
+                        Xóa
+                      </Button>
+                    </Popconfirm>
                   </>
                 ) : null}
               </Space>
@@ -346,16 +347,14 @@ export function TaskCardList({
                                       >
                                         Sửa
                                       </Button>
-                                      <Button
-                                        size="small"
-                                        danger
-                                        icon={<DeleteOutlined />}
-                                        onClick={() =>
-                                          confirmRemoveSubtask(task.id, subtask.id, subtask.title)
-                                        }
+                                      <Popconfirm
+                                        title="Xóa task con?"
+                                        onConfirm={() => removeSubtask(task.id, subtask.id)}
                                       >
-                                        Xóa
-                                      </Button>
+                                        <Button size="small" danger icon={<DeleteOutlined />}>
+                                          Xóa
+                                        </Button>
+                                      </Popconfirm>
                                     </Space>
                                   ) : null}
                                 </div>

@@ -1,5 +1,5 @@
 import { DeleteOutlined } from "@ant-design/icons";
-import { Avatar, Button, Card, Empty, Grid, Input, Modal, Space, Table, Typography } from "antd";
+import { Avatar, Button, Card, Empty, Grid, Input, Modal, Popconfirm, Space, Table, Typography } from "antd";
 
 import { EMPTY_VALUE } from "@/features/project";
 import { useProjectDetailModel } from "../../ProjectDetailContext.jsx";
@@ -33,6 +33,7 @@ export function ProjectMembersSection() {
     loadingEmployees,
     loadEmployeesError,
     confirmRemoveMember,
+    removeMember,
     addSelectedMembersToProject,
     selectedEmployeeIds,
     setSelectedEmployeeIds,
@@ -100,15 +101,19 @@ export function ProjectMembersSection() {
                     </div>
                   </Space>
                   {isAdmin && (
-                    <Button
-                      danger
-                      size="small"
-                      icon={<DeleteOutlined />}
-                      loading={saving}
-                      onClick={() => confirmRemoveMember(member)}
+                    <Popconfirm
+                      title="Xóa thành viên khỏi dự án?"
+                      onConfirm={() => removeMember(member._id)}
                     >
-                      Xóa
-                    </Button>
+                      <Button
+                        danger
+                        size="small"
+                        icon={<DeleteOutlined />}
+                        loading={saving}
+                      >
+                        Xóa
+                      </Button>
+                    </Popconfirm>
                   )}
                 </div>
               ))}

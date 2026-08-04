@@ -115,7 +115,7 @@ export default function Employees() {
             Chi tiết
           </Button>
 
-          <Popconfirm title="Xóa nhân viên này?" onConfirm={() => handleDelete(record._id)}>
+          <Popconfirm title="Xóa nhân viên?" onConfirm={() => handleDelete(record._id)}>
             <Button danger>Xóa</Button>
           </Popconfirm>
         </Space>

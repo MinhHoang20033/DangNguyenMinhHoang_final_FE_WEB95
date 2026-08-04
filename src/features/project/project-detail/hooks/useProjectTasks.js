@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { message, Modal } from "antd";
+import { message } from "antd";
 
 import {
   deleteTaskFile,
@@ -415,28 +415,6 @@ export function useProjectTasks({
     );
   };
 
-  const confirmRemoveTask = (taskId, taskTitle) => {
-    Modal.confirm({
-      title: "Xóa công việc",
-      content: `Bạn có chắc muốn xóa task «${taskTitle || "này"}»? Hành động này không thể hoàn tác.`,
-      okText: "Xóa",
-      okType: "danger",
-      cancelText: "Hủy",
-      onOk: () => removeTask(taskId),
-    });
-  };
-
-  const confirmRemoveSubtask = (parentTaskId, subtaskId, subtaskTitle) => {
-    Modal.confirm({
-      title: "Xóa task con",
-      content: `Bạn có chắc muốn xóa task con «${subtaskTitle || "này"}»?`,
-      okText: "Xóa",
-      okType: "danger",
-      cancelText: "Hủy",
-      onOk: () => removeSubtask(parentTaskId, subtaskId),
-    });
-  };
-
   return {
     taskEditor,
     setTaskEditor,
@@ -461,7 +439,7 @@ export function useProjectTasks({
     openSubtaskEditor,
     submitSubtaskUpdate,
     toggleSubtaskCompletion,
-    confirmRemoveSubtask,
-    confirmRemoveTask,
+    removeSubtask,
+    removeTask,
   };
 }
