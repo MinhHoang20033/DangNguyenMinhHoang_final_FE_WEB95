@@ -1,7 +1,7 @@
 
 
 import { DownloadOutlined } from "@ant-design/icons";
-import { Button, Card, Col, Grid, Row, Space, Typography } from "antd";
+import { Button, Col, Grid, Row, Space, Typography } from "antd";
 import { exportProjectToExcel } from "@/features/project";
 
 import { ProjectActivityLogsSection } from "./components/ActivityLogs/ProjectActivityLogsSection.jsx";
@@ -83,9 +83,7 @@ export default function ProjectDetailView() {
         </Col>
 
         <Col xs={24} xl={14}>
-          <Card title="Phân công nhân sự" style={{ height: "100%" }}>
-            <ProjectMembersSection />
-          </Card>
+          <ProjectMembersSection />
         </Col>
       </Row>
 

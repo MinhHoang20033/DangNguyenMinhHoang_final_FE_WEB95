@@ -1,10 +1,15 @@
 import { DownloadOutlined, EyeOutlined, UploadOutlined } from "@ant-design/icons";
-import { Button, Card, Empty, Grid, Space, Typography } from "antd";
+import { Button, Card, Col, Empty, Grid, Row, Space, Typography } from "antd";
 
 import { formatDateTime, formatFileSize, getFileIcon, getFileTypeLabel } from "@/features/project";
 import { useProjectDetailModel } from "../../ProjectDetailContext.jsx";
+import {
+  sectionCardStyle,
+  sectionCardStyles,
+  softItemCardStyle,
+} from "../../helpers/sectionStyles.js";
 
-const { Text } = Typography;
+const { Text, Title } = Typography;
 
 export function ProjectRelatedFilesSection() {
   const screens = Grid.useBreakpoint();
@@ -24,14 +29,25 @@ export function ProjectRelatedFilesSection() {
 
   return (
     <Card
-      title="Tệp liên quan dự án"
+      title={
+        <div>
+          <Title level={isMobile ? 5 : 4} style={{ margin: 0 }}>
+            Tệp liên quan dự án
+          </Title>
+          <Text type="secondary" style={{ fontSize: 13 }}>
+            {relatedFiles.length} tệp đính kèm
+          </Text>
+        </div>
+      }
       extra={
-        canManageTasks ? (
-          <Button icon={<UploadOutlined />} onClick={triggerFilePicker} loading={saving}>
-            {isMobile ? "Tải lên" : "Tải tệp lên"}
+        !isMobile && canManageTasks ? (
+          <Button icon={<UploadOutlined />} type="primary" onClick={triggerFilePicker} loading={saving}>
+            Tải tệp lên
           </Button>
         ) : null
       }
+      style={sectionCardStyle}
+      styles={sectionCardStyles}
     >
       <input
         ref={fileInputRef}
@@ -42,59 +58,59 @@ export function ProjectRelatedFilesSection() {
         onChange={handleProjectFileUpload}
       />
 
-      {relatedFiles.length ? (
-        <div
-          style={
-            isMobile
-              ? { display: "flex", flexDirection: "column", gap: 12 }
-              : { overflowX: "auto", overflowY: "hidden", paddingBottom: 8 }
-          }
+      {isMobile && canManageTasks && (
+        <Button
+          icon={<UploadOutlined />}
+          type="primary"
+          block
+          onClick={triggerFilePicker}
+          loading={saving}
+          style={{ marginBottom: 14 }}
         >
-          <div
-            style={
-              isMobile
-                ? { display: "flex", flexDirection: "column", gap: 12 }
-                : { display: "flex", gap: 16, width: "max-content" }
-            }
-          >
-            {relatedFiles.map((file) => (
-              <Card
-                key={file.id}
-                size="small"
-                style={{
-                  width: isMobile ? "100%" : 280,
-                  minWidth: isMobile ? undefined : 280,
-                  borderRadius: 14,
-                  flex: isMobile ? undefined : "0 0 auto",
-                }}
-                styles={{ body: { padding: 16 } }}
-              >
-                <Space direction="vertical" size={10} style={{ width: "100%" }}>
+          Tải tệp lên
+        </Button>
+      )}
+
+      {relatedFiles.length ? (
+        <Row gutter={[12, 12]}>
+          {relatedFiles.map((file) => (
+            <Col xs={24} sm={12} xl={8} key={file.id}>
+              <Card size="small" style={{ ...softItemCardStyle, height: "100%" }} styles={{ body: { padding: 16 } }}>
+                <Space direction="vertical" size={12} style={{ width: "100%" }}>
                   <Space align="start">
-                    <span style={{ fontSize: 20, lineHeight: 1 }}>{getFileIcon(file)}</span>
+                    <div
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 14,
+                        background: "#eff6ff",
+                        display: "grid",
+                        placeItems: "center",
+                        fontSize: 22,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {getFileIcon(file)}
+                    </div>
                     <div style={{ minWidth: 0 }}>
-                      <Text strong style={{ wordBreak: "break-word" }}>
+                      <Text strong style={{ wordBreak: "break-word", display: "block" }}>
                         {file.name || file.originalName || "Tệp đính kèm"}
                       </Text>
-                      <div>
-                        <Text type="secondary">
-                          {getFileTypeLabel(file)} • {formatFileSize(file.size)}
-                        </Text>
-                      </div>
+                      <Text type="secondary">
+                        {getFileTypeLabel(file)} • {formatFileSize(file.size)}
+                      </Text>
                     </div>
                   </Space>
-                  <div>
-                    <Text type="secondary">{formatDateTime(file.uploadedAt)}</Text>
-                  </div>
+
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    {formatDateTime(file.uploadedAt)}
+                  </Text>
+
                   <Space direction="vertical" size="small" style={{ width: "100%" }}>
                     <Button block icon={<EyeOutlined />} onClick={() => openFilePreview(file)}>
                       Xem trước
                     </Button>
-                    <Button
-                      block
-                      icon={<DownloadOutlined />}
-                      onClick={() => handleDownloadFile(file)}
-                    >
+                    <Button block icon={<DownloadOutlined />} onClick={() => handleDownloadFile(file)}>
                       Tải tệp
                     </Button>
                     {isAdmin && (
@@ -110,9 +126,9 @@ export function ProjectRelatedFilesSection() {
                   </Space>
                 </Space>
               </Card>
-            ))}
-          </div>
-        </div>
+            </Col>
+          ))}
+        </Row>
       ) : (
         <Empty description="Chưa có tệp liên quan" />
       )}

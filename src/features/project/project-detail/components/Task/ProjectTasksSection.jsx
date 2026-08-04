@@ -1,10 +1,12 @@
-import { Button, Card, Empty, Grid, Table } from "antd";
+import { Button, Card, Empty, Grid, Typography } from "antd";
 
 import { useProjectDetailModel } from "../../ProjectDetailContext.jsx";
+import { sectionCardStyle, sectionCardStyles } from "../../helpers/sectionStyles.js";
 import { SubtaskEditorModal } from "./SubtaskEditorModal.jsx";
 import { TaskEditorModal } from "./TaskEditorModal.jsx";
-import { TaskMobileList } from "./TaskMobileList.jsx";
-import { buildTaskTableColumns } from "./taskTableColumns.jsx";
+import { TaskCardList } from "./TaskMobileList.jsx";
+
+const { Text, Title } = Typography;
 
 export function ProjectTasksSection() {
   const screens = Grid.useBreakpoint();
@@ -41,7 +43,7 @@ export function ProjectTasksSection() {
     uploadingTaskId,
   } = useProjectDetailModel();
 
-  const taskColumnProps = {
+  const taskCardProps = {
     getTaskAssignees,
     openFilePreview,
     handleDownloadFile,
@@ -59,9 +61,8 @@ export function ProjectTasksSection() {
     confirmRemoveTask,
     saving,
     uploadingTaskId,
+    isMobile,
   };
-
-  const taskColumns = buildTaskTableColumns(taskColumnProps);
 
   const emptyDescription = canManageTasks
     ? "Chưa có task trong dự án"
@@ -73,27 +74,39 @@ export function ProjectTasksSection() {
   return (
     <>
       <Card
-        title="Công việc dự án"
+        title={
+          <div>
+            <Title level={isMobile ? 5 : 4} style={{ margin: 0 }}>
+              Công việc dự án
+            </Title>
+            <Text type="secondary" style={{ fontSize: 13 }}>
+              {sortedTasks.length} task
+            </Text>
+          </div>
+        }
         extra={
-          canManageTasks ? (
-            <Button block={isMobile} onClick={() => openTaskEditor()}>
+          !isMobile && canManageTasks ? (
+            <Button type="primary" onClick={() => openTaskEditor()}>
               Thêm task
             </Button>
           ) : null
         }
+        style={sectionCardStyle}
+        styles={sectionCardStyles}
       >
+        {isMobile && canManageTasks && (
+          <Button
+            type="primary"
+            block
+            onClick={() => openTaskEditor()}
+            style={{ marginBottom: 14 }}
+          >
+            Thêm task
+          </Button>
+        )}
+
         {sortedTasks.length ? (
-          isMobile ? (
-            <TaskMobileList tasks={sortedTasks} {...taskColumnProps} />
-          ) : (
-            <Table
-              rowKey="id"
-              columns={taskColumns}
-              dataSource={sortedTasks}
-              pagination={false}
-              scroll={{ x: 1700, y: 420 }}
-            />
-          )
+          <TaskCardList tasks={sortedTasks} {...taskCardProps} />
         ) : (
           <Empty description={emptyDescription} />
         )}
