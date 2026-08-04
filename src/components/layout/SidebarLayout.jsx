@@ -185,13 +185,7 @@ export default function SidebarLayout() {
         visibilityHeight={240}
         style={{
           insetInlineEnd: 20,
-          insetBlockEnd: isProjectDetailPage
-            ? isMobile
-              ? 148
-              : 136
-            : isMobile
-              ? 84
-              : 24,
+          insetBlockEnd: isProjectDetailPage ? isMobile ? 148 : 136 : isMobile ? 84 : 24,
         }}
       />
     </Layout>

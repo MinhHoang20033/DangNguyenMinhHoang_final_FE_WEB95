@@ -1,10 +1,12 @@
+
+
 import { DownloadOutlined } from "@ant-design/icons";
 import { Button, Card, Col, Row, Space, Typography } from "antd";
 import { exportProjectToExcel } from "@/features/project";
 
 import { ProjectActivityLogsSection } from "./components/ActivityLogs/ProjectActivityLogsSection.jsx";
 import { ProjectChatWidget } from "./components/Chat/ProjectChatWidget.jsx";
-import { ProjectMemberAssignmentSection } from "./components/Members/ProjectMemberAssignmentSection.jsx";
+import { ProjectMembersSection } from "./components/Members/ProjectMembersSection.jsx";
 import { OverviewEditorModal } from "./components/Overview/OverviewEditorModal.jsx";
 import { ProjectOverviewSection } from "./components/Overview/ProjectOverviewSection.jsx";
 import { FilePreviewModal } from "./components/Preview/FilePreviewModal.jsx";
@@ -38,6 +40,7 @@ export default function ProjectDetailView() {
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
+      {}
       <div>
         <Space align="start" style={{ width: "100%", justifyContent: "space-between" }}>
           <div>
@@ -61,6 +64,7 @@ export default function ProjectDetailView() {
         </Space>
       </div>
 
+      {}
       <Row gutter={[24, 24]} align="stretch">
         <Col xs={24} xl={10}>
           <ProjectOverviewSection />
@@ -68,11 +72,12 @@ export default function ProjectDetailView() {
 
         <Col xs={24} xl={14}>
           <Card title="Phân công nhân sự" style={{ height: "100%" }}>
-            <ProjectMemberAssignmentSection />
+            <ProjectMembersSection />
           </Card>
         </Col>
       </Row>
 
+      {}
       <PreviewSectionErrorBoundary>
         <Space direction="vertical" size={24} style={{ width: "100%" }}>
           <ProjectRelatedFilesSection />
@@ -90,6 +95,7 @@ export default function ProjectDetailView() {
 
       <ProjectActivityLogsSection />
 
+      {}
       {isAdmin && (
         <OverviewEditorModal
           open={overviewOpen}

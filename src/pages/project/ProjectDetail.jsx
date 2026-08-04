@@ -1,4 +1,6 @@
-﻿import { useContext } from "react";
+﻿
+
+import { useContext } from "react";
 import { useParams } from "react-router-dom";
 
 import { AuthContext } from "@/context/AuthContextValue";
@@ -11,6 +13,8 @@ import {
 export default function ProjectDetail() {
   const { id } = useParams();
   const { user } = useContext(AuthContext);
+
+
   const model = useProjectDetail(id, user);
 
   if (model.loading) {
@@ -20,6 +24,7 @@ export default function ProjectDetail() {
   if (model.loadError) {
     return <h2>{model.loadError}</h2>;
   }
+
 
   return (
     <ProjectDetailProvider value={model}>

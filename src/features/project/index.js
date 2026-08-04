@@ -1,4 +1,4 @@
-/** Public API for the project feature. */
+
 export * from "./shared/index.js";
 export * from "./utils/projectExport.js";
 export {

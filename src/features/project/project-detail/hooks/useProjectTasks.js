@@ -14,7 +14,6 @@ import {
   sortTasksByCompletion,
   warnInvalidTaskExcelSelection,
 } from "../helpers/taskHelpers.js";
-import { stripLegacyProjectFields } from "@/features/project";
 
 const EMPTY_TASK_EDITOR = {
   open: false,
@@ -66,27 +65,21 @@ export function useProjectTasks({
   const closeTaskEditor = () => setTaskEditor(EMPTY_TASK_EDITOR);
   const closeSubtaskEditor = () => setSubtaskEditor(EMPTY_SUBTASK_EDITOR);
 
-  /** Refetch project rồi mới ghi tasks — giảm lost update khi nhiều người sửa */
+
   const saveTasksUpdate = async (buildNextTasks, successMessage) => {
     setSaving(true);
 
     try {
-      const fresh = stripLegacyProjectFields(await getProject(projectId));
+      const fresh = await getProject(projectId);
       const currentTasks = fresh.tasks ?? [];
       const nextTasks = buildNextTasks(currentTasks);
-      const {
-        activityLogs: _logs,
-        updateHistory: _history,
-        revision: _revision,
-        ...projectPayload
-      } = fresh;
+      const { activityLogs: _logs, ...projectPayload } = fresh;
       const updatedProject = await updateProject(projectId, { ...projectPayload, tasks: nextTasks });
-      const normalized = stripLegacyProjectFields(updatedProject);
-      setProject(normalized);
+      setProject(updatedProject);
       if (successMessage) {
         message.success(successMessage);
       }
-      return normalized;
+      return updatedProject;
     } catch (error) {
       message.error(error.message || "Không thể cập nhật công việc");
       return null;
@@ -134,7 +127,7 @@ export function useProjectTasks({
 
     try {
       const updatedProject = await uploadTaskSubmissionFiles(projectId, taskId, formData);
-      setProject(stripLegacyProjectFields(updatedProject));
+      setProject(updatedProject);
       message.success("Đã gửi lại tệp hoàn thành cho task");
     } catch (error) {
       message.error(error.message || "Không thể tải tệp cho task");
@@ -149,7 +142,7 @@ export function useProjectTasks({
 
     try {
       const updatedProject = await deleteTaskFile(projectId, taskId, fileId, scope);
-      setProject(stripLegacyProjectFields(updatedProject));
+      setProject(updatedProject);
       message.success(scope === "submissionFiles" ? "Đã xóa file gửi lại" : "Đã xóa file task");
     } catch (error) {
       message.error(error.message || "Không thể xóa file task");
@@ -232,7 +225,7 @@ export function useProjectTasks({
         const formData = new FormData();
         pendingFiles.forEach((file) => formData.append("files", file));
         const updatedProject = await uploadTaskFiles(projectId, nextTaskId, formData);
-        setProject(stripLegacyProjectFields(updatedProject));
+        setProject(updatedProject);
         message.success("Đã tải tệp Excel cho task");
       } catch (uploadError) {
         if (isNewTask) {

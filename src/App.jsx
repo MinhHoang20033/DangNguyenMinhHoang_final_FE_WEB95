@@ -7,10 +7,11 @@ import VerifyOtp from "@/pages/auth/VerifyOtp";
 import ResetPassword from "@/pages/auth/ResetPassword";
 import Dashboard from "@/pages/dashboard/Dashboard";
 import Projects from "@/pages/project/Projects";
-import Employees from "@/pages/employee/Employees";
 import ProjectDetail from "@/pages/project/ProjectDetail";
+import Employees from "@/pages/employee/Employees";
 import EmployeeDetail from "@/pages/employee/EmployeeDetail";
 import AddEmployee from "@/pages/employee/AddEmployee";
+
 import Partners from "@/pages/partner/Partners";
 
 import SidebarLayout from "@/components/layout/SidebarLayout";

@@ -20,21 +20,9 @@ export const warnInvalidTaskExcelSelection = (selectedFiles, validFiles, message
   }
 };
 
-export const isProjectManager = (project, employeeId) => {
-  const id = normalizeEmployeeId(employeeId);
-  if (!id) {
-    return false;
-  }
-  return normalizeEmployeeId(project?.managerId) === id;
-};
+export const canManageProjectTasks = ({ isAdmin, isPM, isProjectMember }) =>
+  Boolean(isAdmin) || (Boolean(isPM) && Boolean(isProjectMember));
 
-/** Admin, PM (thành viên dự án), hoặc quản lý dự án (managerId) */
-export const canManageProjectTasks = ({ isAdmin, isPM, isProjectMember, project, employeeId }) =>
-  Boolean(isAdmin) ||
-  (Boolean(isPM) && Boolean(isProjectMember)) ||
-  isProjectManager(project, employeeId);
-
-/** Nhân viên thường chỉ thấy task được giao; quản lý thấy toàn bộ */
 export const filterVisibleTasks = (tasks = [], employeeId, canManageTasks) =>
   canManageTasks ? tasks : tasks.filter((task) => isTaskAssignee(task, employeeId));
 

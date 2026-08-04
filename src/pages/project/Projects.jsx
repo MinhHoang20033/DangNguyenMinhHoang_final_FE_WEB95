@@ -20,11 +20,7 @@ import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import { addProject, deleteProject, getProjects } from "@/utils/api";
 import { AuthContext } from "@/context/AuthContextValue";
-import {
-  getProjectStatusPresentation,
-  isProjectOverdue,
-  stripLegacyProjectFields,
-} from "@/features/project";
+import { getProjectStatusPresentation, isProjectOverdue } from "@/features/project";
 
 const { Title, Text } = Typography;
 
@@ -111,7 +107,7 @@ export default function Projects() {
     setLoading(true);
     try {
       const data = await getProjects();
-      setProjects(data.map(stripLegacyProjectFields));
+      setProjects(data);
     } catch (err) {
       console.error("Fetch projects failed:", err);
     } finally {
@@ -132,7 +128,7 @@ export default function Projects() {
         name: name.trim(),
         deadline: deadline ? deadline.format("YYYY-MM-DD") : "",
       });
-      setProjects((prev) => [stripLegacyProjectFields(created), ...prev]);
+      setProjects((prev) => [created, ...prev]);
       setName("");
       setDeadline(null);
       setOpen(false);

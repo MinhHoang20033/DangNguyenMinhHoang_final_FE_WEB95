@@ -12,14 +12,10 @@ export function buildMemberEmployees(members, employees, user) {
               : "Thành viên dự án",
           role: "",
           avatar: "",
-          assignment: member.assignment,
         };
       }
 
-      return {
-        ...employee,
-        assignment: member.assignment,
-      };
+      return { ...employee };
     })
     .filter(Boolean);
 }

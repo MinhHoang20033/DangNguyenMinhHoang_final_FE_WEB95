@@ -19,12 +19,13 @@ import {
   TeamOutlined,
 } from "@ant-design/icons";
 import { getEmployees, getProjects } from "@/utils/api";
-import { getProjectStatusPresentation, isProjectOverdue, stripLegacyProjectFields } from "@/features/project";
+import { getProjectStatusPresentation, isProjectOverdue } from "@/features/project";
 
 const { Title, Text } = Typography;
 const PROJECT_PROGRESS_BATCH_SIZE = 5;
 const PROJECT_MEMBER_BATCH_SIZE = 6;
 const UNASSIGNED_MEMBER_BATCH_SIZE = 6;
+const RECENT_PROJECTS_COUNT = 6;
 
 const surfaceStyle = {
   borderRadius: 24,
@@ -146,7 +147,7 @@ export default function Dashboard() {
           getProjects(),
           getEmployees({ all: true }),
         ]);
-        setProjects((projectData ?? []).map(stripLegacyProjectFields));
+        setProjects(projectData ?? []);
         setEmployees(employeeData ?? []);
       } finally {
         setLoading(false);
@@ -171,7 +172,7 @@ export default function Dashboard() {
 
     const recentProjects = [...projects]
       .sort((left, right) => getProjectCreatedAt(right) - getProjectCreatedAt(left))
-      .slice(0, 5);
+      .slice(0, RECENT_PROJECTS_COUNT);
 
     const projectsByTasks = [...projects]
       .sort((left, right) => (right.tasks?.length ?? 0) - (left.tasks?.length ?? 0))
@@ -215,8 +216,7 @@ export default function Dashboard() {
       .filter((item) => item.projectNames.size > 0 && item.total === 0)
       .sort((left, right) =>
         (left.employee.name || "").localeCompare(right.employee.name || "", "vi"),
-      )
-      .slice(0, 6);
+      );
 
     return {
       inProgressProjects,

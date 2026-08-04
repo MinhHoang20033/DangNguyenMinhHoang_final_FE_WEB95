@@ -1,8 +1,9 @@
+
+
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 
 import { getEmployees, getProject } from "@/utils/api";
-import { stripLegacyProjectFields } from "@/features/project";
 import { buildMemberEmployees } from "../helpers/projectMemberHelpers.js";
 import { canManageProjectTasks } from "../helpers/taskHelpers.js";
 import { useProjectChat } from "./useProjectChat.js";
@@ -10,6 +11,7 @@ import { useProjectFiles } from "./useProjectFiles.js";
 import { useProjectMembers } from "./useProjectMembers.jsx";
 import { useProjectProgress } from "./useProjectProgress.js";
 import { useProjectSave } from "./useProjectSave.js";
+import { useProjectSync } from "./useProjectSync.js";
 import { useProjectTasks } from "./useProjectTasks.js";
 
 const EMPTY_OVERVIEW_DRAFT = {
@@ -19,7 +21,6 @@ const EMPTY_OVERVIEW_DRAFT = {
   managerName: "",
   siteName: "",
   code: "",
-  formNo: "",
   desc: "",
 };
 
@@ -35,6 +36,7 @@ export function useProjectDetail(id, user) {
   const [overviewOpen, setOverviewOpen] = useState(false);
   const [overviewDraft, setOverviewDraft] = useState(EMPTY_OVERVIEW_DRAFT);
 
+
   useEffect(() => {
     let cancelled = false;
 
@@ -49,7 +51,7 @@ export function useProjectDetail(id, user) {
           getEmployees({ all: true }),
         ]);
         if (cancelled) return;
-        setProject(stripLegacyProjectFields(projectData));
+        setProject(projectData);
         setEmployees(emps);
       } catch (error) {
         if (cancelled) return;
@@ -65,34 +67,48 @@ export function useProjectDetail(id, user) {
     };
   }, [id]);
 
+
   const members = project?.members ?? [];
   const isProjectMember = members.some((member) => member.employeeId === user?.employeeId);
+
+
   const canManageTasks = project
     ? canManageProjectTasks({
         isAdmin,
         isPM,
         isProjectMember,
-        project,
-        employeeId: user?.employeeId,
       })
     : false;
+
+
   const memberEmployees = project ? buildMemberEmployees(members, employees, user) : [];
+
   const currentEmployee = employees.find((item) => item._id === user?.employeeId);
-  const currentChatAuthor = isAdmin
-    ? user?.username || "admin"
-    : currentEmployee?.name || user?.username || "Nhân viên";
+  const currentChatAuthor = isAdmin ? user?.username || "admin" : currentEmployee?.name || user?.username || "Nhân viên";
+
 
   const { saveProject } = useProjectSave({ projectId: id, setProject, setSaving });
+
   const fileModel = useProjectFiles({ projectId: id, project, setProject, setSaving });
+
   const progressModel = useProjectProgress({ project, saveProject });
+
   const memberModel = useProjectMembers({
     project,
-    employees,
     isAdmin,
     saving,
     saveProject,
+    setEmployees,
   });
-  const chatModel = useProjectChat({ project, saveProject, currentChatAuthor });
+
+  const chatModel = useProjectChat({
+    projectId: id,
+    projectChatMessages: project?.chatMessages,
+    saveProject,
+    currentChatAuthor,
+    currentChatAuthorId: user?.id ?? "",
+  });
+
   const taskModel = useProjectTasks({
     projectId: id,
     project,
@@ -103,6 +119,20 @@ export function useProjectDetail(id, user) {
     memberEmployees,
   });
 
+  useProjectSync({
+    projectId: id,
+    setProject,
+    enabled: Boolean(project) && !loading,
+    pauseSync:
+      saving ||
+      overviewOpen ||
+      taskModel.taskEditor.open ||
+      taskModel.subtaskEditor.open ||
+      progressModel.progressRowEditor.open ||
+      progressModel.progressConfigEditor.open,
+    skipTasks: taskModel.taskEditor.open || taskModel.subtaskEditor.open,
+  });
+
   if (loading) {
     return { loading: true, project: null, loadError: null };
   }
@@ -111,12 +141,14 @@ export function useProjectDetail(id, user) {
     return { loading: false, project: null, loadError: loadError || "Không tìm thấy dự án" };
   }
 
+
   const activityLogs = [...(project.activityLogs ?? [])].reverse();
 
   const findEmployeeByActorName = (actorName) => {
     if (!actorName) return null;
     return employees.find((employee) => employee.name === actorName) ?? null;
   };
+
 
   const openOverviewEditor = () => {
     const deadlineValue = project.deadline ? dayjs(project.deadline) : null;
@@ -128,7 +160,6 @@ export function useProjectDetail(id, user) {
       managerName: project.managerName ?? "",
       siteName: project.siteName,
       code: project.code,
-      formNo: project.formNo,
       desc: project.desc,
     });
     setOverviewOpen(true);
@@ -140,6 +171,7 @@ export function useProjectDetail(id, user) {
       setOverviewOpen(false);
     }
   };
+
 
   return {
     loading: false,
@@ -157,8 +189,6 @@ export function useProjectDetail(id, user) {
     canManageTasks,
     submitOverviewUpdate,
     openOverviewEditor,
-    id,
-    employees,
     userEmployeeId: user?.employeeId,
     saveProject,
     ...fileModel,

@@ -1,3 +1,5 @@
+
+
 import { createContext, useContext } from "react";
 
 const ProjectDetailContext = createContext(null);
@@ -5,6 +7,7 @@ const ProjectDetailContext = createContext(null);
 export function ProjectDetailProvider({ value, children }) {
   return <ProjectDetailContext.Provider value={value}>{children}</ProjectDetailContext.Provider>;
 }
+
 export function useProjectDetailModel() {
   const context = useContext(ProjectDetailContext);
   if (!context) {
@@ -12,4 +15,3 @@ export function useProjectDetailModel() {
   }
   return context;
 }
-

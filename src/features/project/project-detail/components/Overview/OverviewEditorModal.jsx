@@ -84,14 +84,6 @@ export function OverviewEditorModal({
         </div>
 
         <div>
-          <Text>Biểu mẫu</Text>
-          <Input
-            value={overviewDraft.formNo}
-            onChange={(event) => onDraftChange({ formNo: event.target.value })}
-          />
-        </div>
-
-        <div>
           <Text>Mô tả</Text>
           <Input.TextArea
             rows={4}

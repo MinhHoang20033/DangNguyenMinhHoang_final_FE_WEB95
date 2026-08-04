@@ -3,7 +3,7 @@ import { message } from "antd";
 import * as XLSX from "xlsx";
 
 import { deleteProjectFile, uploadProjectFiles } from "@/utils/api";
-import { createEmptyPreviewState, FILE_BASE_URL, stripLegacyProjectFields } from "@/features/project";
+import { createEmptyPreviewState, FILE_BASE_URL } from "@/features/project";
 
 export function useProjectFiles({ projectId, project, setProject, setSaving }) {
   const [previewState, setPreviewState] = useState(createEmptyPreviewState);
@@ -32,7 +32,7 @@ export function useProjectFiles({ projectId, project, setProject, setSaving }) {
 
     try {
       const updatedProject = await uploadProjectFiles(projectId, formData);
-      setProject(stripLegacyProjectFields(updatedProject));
+      setProject(updatedProject);
       message.success("Tải tệp lên thành công");
     } catch (error) {
       message.error(error.message || "Không thể tải tệp lên");
@@ -93,7 +93,7 @@ export function useProjectFiles({ projectId, project, setProject, setSaving }) {
 
     try {
       const updatedProject = await deleteProjectFile(projectId, fileId);
-      setProject(stripLegacyProjectFields(updatedProject));
+      setProject(updatedProject);
       message.success("Đã xóa tệp liên quan");
     } catch (error) {
       message.error(error.message || "Không thể xóa tệp liên quan");

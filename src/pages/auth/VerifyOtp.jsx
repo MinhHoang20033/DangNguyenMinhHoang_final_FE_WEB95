@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Alert, Button, Card, Form, Input, Typography, message } from "antd";
+import { Button, Card, Form, Input, Typography, message } from "antd";
 import { verifyPasswordOtp } from "@/utils/api";
 
 const { Text, Link } = Typography;
@@ -9,14 +9,12 @@ export default function VerifyOtp() {
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email || sessionStorage.getItem("reset_email") || "";
-  const previewMode = Boolean(location.state?.previewMode);
-  const previewOtp = location.state?.previewOtp || "";
 
   useEffect(() => {
-    if (email) {
-      sessionStorage.setItem("reset_email", email);
+    if (location.state?.email) {
+      sessionStorage.setItem("reset_email", location.state.email);
     }
-  }, [email]);
+  }, [location.state?.email]);
 
   useEffect(() => {
     if (!email) {
@@ -26,12 +24,13 @@ export default function VerifyOtp() {
 
   const handleVerifyOtp = async (values) => {
     try {
-      const result = await verifyPasswordOtp(email, values.otp);
+      const otp = String(values.otp || "").trim();
+      const result = await verifyPasswordOtp(email, otp);
       sessionStorage.setItem("reset_token", result.resetToken);
       navigate("/reset-password");
       message.success("Xác thực OTP thành công");
     } catch (err) {
-      message.error(err.message || "OTP không hợp lệ");
+      message.error(err.message || "Mã OTP không hợp lệ");
     }
   };
 
@@ -49,27 +48,16 @@ export default function VerifyOtp() {
         </Text>
       </div>
 
-      {previewMode && previewOtp && (
-        <Alert
-          type="warning"
-          showIcon
-          style={{ marginBottom: 16 }}
-          message="Email chưa được cấu hình"
-          description={
-            <span>
-              OTP xem thử để test local: <strong>{previewOtp}</strong>
-            </span>
-          }
-        />
-      )}
-
       <Form layout="vertical" onFinish={handleVerifyOtp}>
         <Form.Item
           name="otp"
           label="Mã OTP"
-          rules={[{ required: true, message: "Vui lòng nhập mã OTP" }]}
+          rules={[
+            { required: true, message: "Vui lòng nhập mã OTP" },
+            { pattern: /^\d{6}$/, message: "Mã OTP phải gồm đúng 6 chữ số" },
+          ]}
         >
-          <Input placeholder="Nhập mã OTP gồm 6 số" />
+          <Input placeholder="Nhập mã OTP gồm 6 số" maxLength={6} inputMode="numeric" />
         </Form.Item>
 
         <Button type="primary" htmlType="submit" block>

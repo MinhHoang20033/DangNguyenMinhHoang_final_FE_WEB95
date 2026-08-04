@@ -36,12 +36,18 @@ export default function Login() {
         margin: "120px auto",
       }}
     >
-      <Form onFinish={onFinish}>
-        <Form.Item name="username">
+      <Form onFinish={onFinish} layout="vertical" requiredMark={false}>
+        <Form.Item
+          name="username"
+          rules={[{ required: true, message: "Vui lòng nhập tên đăng nhập" }]}
+        >
           <Input placeholder="Tên đăng nhập" />
         </Form.Item>
 
-        <Form.Item name="password">
+        <Form.Item
+          name="password"
+          rules={[{ required: true, message: "Vui lòng nhập mật khẩu" }]}
+        >
           <Input.Password placeholder="Mật khẩu" />
         </Form.Item>
 

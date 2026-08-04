@@ -1,5 +1,14 @@
 import * as XLSX from "xlsx";
+import dayjs from "dayjs";
+
+import { EMPTY_VALUE } from "../shared/constants.js";
 import { getProjectStatusPresentation } from "../shared/projectStatus.js";
+
+const formatProjectDeadline = (value) => {
+  if (!value) return EMPTY_VALUE;
+  const parsed = dayjs(value);
+  return parsed.isValid() ? parsed.format("DD/MM/YYYY") : String(value);
+};
 
 const DEFAULT_WIDTHS = {
   narrow: 8,
@@ -81,11 +90,10 @@ const buildOverviewRows = (project, memberEmployees = []) => {
     ["Tổng quan dự án"],
     [],
     ["Tên dự án", project.name ?? ""],
+    ["Hạn dự án", formatProjectDeadline(project.deadline)],
     ["Quản lý dự án", project.managerName ?? ""],
     ["Công trình", project.siteName ?? ""],
     ["Mã số", project.code ?? ""],
-    ["Ngày", project.date ?? ""],
-    ["Biểu mẫu", project.formNo ?? ""],
     ["Trạng thái", getProjectStatusPresentation(project).label],
     ["Mô tả", project.desc ?? ""],
     [],
@@ -112,7 +120,6 @@ const buildOverviewRows = (project, memberEmployees = []) => {
   return rows;
 };
 
-/** Sheet «Tiến độ» — đọc trực tiếp `progressChecks` đã lưu trên DB. */
 const buildProgressRows = (project) => {
   const section = project?.progressChecks ?? {};
   const columns = Array.isArray(section.columns) ? section.columns : [];
@@ -124,6 +131,7 @@ const buildProgressRows = (project) => {
     ...(section.subtitle ? [[section.subtitle]] : []),
     [],
     ["Tên dự án", project.name ?? ""],
+    ["Hạn dự án", formatProjectDeadline(project.deadline)],
     ["Công trình", project.siteName ?? ""],
     ["Mã số", project.code ?? ""],
     [],

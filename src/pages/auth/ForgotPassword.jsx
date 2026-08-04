@@ -10,19 +10,15 @@ export default function ForgotPassword() {
   const handleRequestOtp = async (values) => {
     try {
       const result = await requestPasswordOtp(values.email);
+
+      sessionStorage.setItem("reset_email", values.email);
+
       navigate("/verify-otp", {
-        state: {
-          email: values.email,
-          previewMode: Boolean(result.previewMode),
-          previewOtp: result.previewOtp || "",
-        },
+        state: { email: values.email },
       });
 
-      message.success(
-        result.previewMode
-          ? "Đã tạo OTP ở chế độ xem thử"
-          : "Đã gửi mã OTP đến email của bạn",
-      );
+      const sentTo = result.email;
+      message.success(`Đã gửi mã OTP đến ${sentTo}. Vui lòng kiểm tra hộp thư (cả thư rác).`);
     } catch (err) {
       message.error(err.message || "Không thể gửi OTP");
     }

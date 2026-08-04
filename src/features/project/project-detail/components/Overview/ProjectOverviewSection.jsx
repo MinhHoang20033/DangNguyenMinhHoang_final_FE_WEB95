@@ -27,7 +27,6 @@ export function ProjectOverviewSection() {
         </Descriptions.Item>
         <Descriptions.Item label="Công trình">{project.siteName || EMPTY_VALUE}</Descriptions.Item>
         <Descriptions.Item label="Mã số">{project.code || EMPTY_VALUE}</Descriptions.Item>
-        <Descriptions.Item label="Biểu mẫu">{project.formNo || EMPTY_VALUE}</Descriptions.Item>
         <Descriptions.Item label="Mô tả">{project.desc || EMPTY_VALUE}</Descriptions.Item>
       </Descriptions>
     </Card>

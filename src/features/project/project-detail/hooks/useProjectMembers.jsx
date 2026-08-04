@@ -1,45 +1,89 @@
-import { useEffect, useState } from "react";
-import { Avatar, Button, Space, Tag, Typography } from "antd";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Avatar, Button, Space } from "antd";
 
-import { EMPLOYEE_BATCH_SIZE, EMPTY_VALUE } from "@/features/project";
+import { getEmployees } from "@/utils/api";
+import { EMPTY_VALUE } from "@/features/project";
 
-const { Text } = Typography;
+const PAGE_SIZE = 10;
 
-export function useProjectMembers({ project, employees, isAdmin, saving, saveProject }) {
+export function useProjectMembers({ project, isAdmin, saving, saveProject, setEmployees }) {
   const [search, setSearch] = useState("");
   const [memberToolboxOpen, setMemberToolboxOpen] = useState(false);
-  const [visibleEmployeeCount, setVisibleEmployeeCount] = useState(EMPLOYEE_BATCH_SIZE);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [availableEmployees, setAvailableEmployees] = useState([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  const [loadEmployeesError, setLoadEmployeesError] = useState(null);
 
-  const members = project?.members ?? [];
+  const memberEmployeeIdKey = useMemo(
+    () =>
+      (project?.members ?? [])
+        .map((member) => member.employeeId)
+        .sort()
+        .join("|"),
+    [project?.members],
+  );
 
-  useEffect(() => {
-    if (memberToolboxOpen) {
-      setVisibleEmployeeCount(EMPLOYEE_BATCH_SIZE);
-    }
-  }, [memberToolboxOpen, search]);
-
-  const availableEmployees = employees
-    .filter((employee) => !members.some((member) => member.employeeId === employee._id))
-    .filter((employee) => employee.name?.toLowerCase().includes(search.toLowerCase()));
-  const visibleAvailableEmployees = availableEmployees.slice(0, visibleEmployeeCount);
-
-  const handleMemberListScroll = (event) => {
-    const { scrollTop, clientHeight, scrollHeight } = event.currentTarget;
-    const reachedBottom = scrollTop + clientHeight >= scrollHeight - 24;
-
-    if (!reachedBottom || visibleEmployeeCount >= availableEmployees.length) {
+  const fetchAvailableEmployees = useCallback(async () => {
+    if (!memberToolboxOpen || !isAdmin) {
       return;
     }
 
-    setVisibleEmployeeCount((current) =>
-      Math.min(current + EMPLOYEE_BATCH_SIZE, availableEmployees.length),
-    );
+    setLoadingEmployees(true);
+    setLoadEmployeesError(null);
+
+    try {
+      const excludeIds = memberEmployeeIdKey ? memberEmployeeIdKey.split("|").filter(Boolean) : [];
+      const result = await getEmployees({
+        page,
+        limit: PAGE_SIZE,
+        search: search.trim(),
+        excludeIds,
+      });
+      setAvailableEmployees(result.items ?? []);
+      setTotal(result.total ?? 0);
+    } catch (error) {
+      setLoadEmployeesError(error.message || "Không tải được danh sách nhân viên");
+      setAvailableEmployees([]);
+      setTotal(0);
+    } finally {
+      setLoadingEmployees(false);
+    }
+  }, [isAdmin, memberEmployeeIdKey, memberToolboxOpen, page, search]);
+
+  useEffect(() => {
+    if (!memberToolboxOpen) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      fetchAvailableEmployees();
+    }, search ? 300 : 0);
+
+    return () => window.clearTimeout(timer);
+  }, [fetchAvailableEmployees, memberToolboxOpen, search]);
+
+  const openMemberToolbox = () => {
+    setSearch("");
+    setPage(1);
+    setMemberToolboxOpen(true);
   };
 
-  const addMemberToProject = async (employeeId) => {
+  const closeMemberToolbox = () => {
+    setMemberToolboxOpen(false);
+    setSearch("");
+    setPage(1);
+  };
+
+  const handleSearchChange = (value) => {
+    setSearch(value);
+    setPage(1);
+  };
+
+  const addMemberToProject = async (employee) => {
     const updated = await saveProject(
       (fresh) => ({
-        members: [...(fresh.members ?? []), { employeeId, assignment: "" }],
+        members: [...(fresh.members ?? []), { employeeId: employee._id }],
       }),
       "Đã thêm thành viên",
     );
@@ -48,14 +92,20 @@ export function useProjectMembers({ project, employees, isAdmin, saving, savePro
       return;
     }
 
-    setMemberToolboxOpen(false);
-    setSearch("");
+    setEmployees((current) => {
+      if (current.some((item) => item._id === employee._id)) {
+        return current;
+      }
+
+      return [...current, employee];
+    });
+
+    closeMemberToolbox();
   };
 
   const removeMember = async (employeeId) => {
     await saveProject(
       (fresh) => ({
-        managerId: fresh.managerId === employeeId ? "" : fresh.managerId,
         members: (fresh.members ?? []).filter((member) => member.employeeId !== employeeId),
       }),
       "Đã xóa thành viên",
@@ -73,19 +123,26 @@ export function useProjectMembers({ project, employees, isAdmin, saving, savePro
       width: 80,
     },
     {
+      title: "Mã NV",
+      dataIndex: "employeeCode",
+      width: 90,
+      render: (value) => value || "----",
+    },
+    {
       title: "Tên",
       dataIndex: "name",
       width: 180,
     },
     {
-      title: "Vai trò",
+      title: "Chức danh",
       dataIndex: "role",
       width: 140,
+      render: (value) => value || EMPTY_VALUE,
     },
     {
       title: "Thao tác",
       render: (_, record) => (
-        <Button type="primary" onClick={() => addMemberToProject(record._id)}>
+        <Button type="primary" onClick={() => addMemberToProject(record)}>
           Thêm vào dự án
         </Button>
       ),
@@ -116,13 +173,9 @@ export function useProjectMembers({ project, employees, isAdmin, saving, savePro
     },
     {
       title: "Vai trò",
-      width: 200,
-      render: (_, record) => (
-        <Space size="small" wrap>
-          <Text>{record.role || EMPTY_VALUE}</Text>
-          {record._id === project?.managerId ? <Tag color="blue">Quản lý dự án</Tag> : null}
-        </Space>
-      ),
+      dataIndex: "role",
+      width: 140,
+      render: (value) => value || EMPTY_VALUE,
     },
     {
       title: "Thao tác",
@@ -140,15 +193,16 @@ export function useProjectMembers({ project, employees, isAdmin, saving, savePro
 
   return {
     search,
-    setSearch,
+    setSearch: handleSearchChange,
     memberToolboxOpen,
-    setMemberToolboxOpen,
-    visibleEmployeeCount,
-    setVisibleEmployeeCount,
-    members,
+    openMemberToolbox,
+    closeMemberToolbox,
+    page,
+    setPage,
+    total,
+    loadingEmployees,
+    loadEmployeesError,
     availableEmployees,
-    visibleAvailableEmployees,
-    handleMemberListScroll,
     addMemberToProject,
     removeMember,
     employeeColumns,

@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Button,
+  Empty,
   Form,
   Input,
   Modal,
@@ -14,6 +15,7 @@ import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { addPartner, deletePartner, getPartners, updatePartner } from "@/utils/api";
 
 const { Title } = Typography;
+const PAGE_SIZE = 10;
 
 const createInitialEditorState = () => ({
   open: false,
@@ -23,38 +25,42 @@ const createInitialEditorState = () => ({
 export default function Partners() {
   const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [editor, setEditor] = useState(createInitialEditorState());
   const [form] = Form.useForm();
 
+  const fetchPartners = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+
+    try {
+      const result = await getPartners({
+        page,
+        limit: PAGE_SIZE,
+        search: search.trim(),
+      });
+      setPartners(result.items ?? []);
+      setTotal(result.total ?? 0);
+    } catch (error) {
+      setLoadError(error.message || "Không thể tải danh sách đối tác");
+      setPartners([]);
+      setTotal(0);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, search]);
+
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const data = await getPartners();
-        setPartners(data ?? []);
-      } catch (error) {
-        message.error(error.message || "Không thể tải danh sách đối tác");
-      } finally {
-        setLoading(false);
-      }
-    };
+    const timer = window.setTimeout(() => {
+      fetchPartners();
+    }, search ? 300 : 0);
 
-    fetchData();
-  }, []);
-
-  const filteredPartners = useMemo(
-    () =>
-      partners.filter((partner) => {
-        const keyword = search.toLowerCase();
-        return (
-          (partner.name || "").toLowerCase().includes(keyword) ||
-          (partner.company || "").toLowerCase().includes(keyword)
-        );
-      }),
-    [partners, search],
-  );
+    return () => window.clearTimeout(timer);
+  }, [fetchPartners, search]);
 
   const openCreateModal = () => {
     setEditor({
@@ -90,19 +96,23 @@ export default function Partners() {
   const handleSubmit = async (values) => {
     setSaving(true);
     try {
-      if (editor.partnerId) {
-        const updated = await updatePartner(editor.partnerId, values);
-        setPartners((current) =>
-          current.map((partner) => (partner._id === editor.partnerId ? updated : partner)),
-        );
-        message.success("Đã cập nhật thông tin đối tác");
-      } else {
-        const created = await addPartner(values);
-        setPartners((current) => [created, ...current]);
+      const isCreate = !editor.partnerId;
+
+      if (isCreate) {
+        await addPartner(values);
         message.success("Đã thêm đối tác");
+      } else {
+        await updatePartner(editor.partnerId, values);
+        message.success("Đã cập nhật thông tin đối tác");
       }
 
       closeModal();
+
+      if (isCreate && page !== 1) {
+        setPage(1);
+      } else {
+        await fetchPartners();
+      }
     } catch (error) {
       message.error(error.message || "Không thể lưu thông tin đối tác");
     } finally {
@@ -113,7 +123,13 @@ export default function Partners() {
   const handleDelete = async (partnerId) => {
     try {
       await deletePartner(partnerId);
-      setPartners((current) => current.filter((partner) => partner._id !== partnerId));
+
+      if (partners.length === 1 && page > 1) {
+        setPage((current) => current - 1);
+      } else {
+        await fetchPartners();
+      }
+
       message.success("Đã xóa đối tác");
     } catch (error) {
       message.error(error.message || "Không thể xóa đối tác");
@@ -191,19 +207,34 @@ export default function Partners() {
         <Input
           placeholder="Tìm kiếm theo tên đối tác hoặc công ty..."
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={(event) => {
+            setSearch(event.target.value);
+            setPage(1);
+          }}
           style={{ maxWidth: 360 }}
+          allowClear
         />
       </Space>
 
-      <Table
-        rowKey="_id"
-        columns={columns}
-        dataSource={filteredPartners}
-        loading={loading}
-        pagination={false}
-        scroll={{ x: 960 }}
-      />
+      {loadError ? (
+        <Empty description={loadError} style={{ marginTop: 40 }} />
+      ) : (
+        <Table
+          rowKey="_id"
+          columns={columns}
+          dataSource={partners}
+          loading={loading}
+          pagination={{
+            current: page,
+            pageSize: PAGE_SIZE,
+            total,
+            showSizeChanger: false,
+            onChange: (nextPage) => setPage(nextPage),
+          }}
+          scroll={{ x: 960 }}
+          locale={{ emptyText: loading ? "Đang tải..." : "Không có đối tác" }}
+        />
+      )}
 
       <Modal
         open={editor.open}
