@@ -89,7 +89,7 @@ export function useProjectDetail(id, user) {
 
   const { saveProject } = useProjectSave({ projectId: id, setProject, setSaving });
 
-  const fileModel = useProjectFiles({ projectId: id, project, setProject, setSaving });
+  const fileModel = useProjectFiles({ projectId: id, project, setProject });
 
   const progressModel = useProjectProgress({ project, saveProject });
 
@@ -125,6 +125,8 @@ export function useProjectDetail(id, user) {
     enabled: Boolean(project) && !loading,
     pauseSync:
       saving ||
+      fileModel.uploadingFiles ||
+      Boolean(fileModel.deletingFileId) ||
       overviewOpen ||
       taskModel.taskEditor.open ||
       taskModel.subtaskEditor.open ||

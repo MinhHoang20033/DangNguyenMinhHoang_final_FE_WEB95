@@ -5,8 +5,10 @@ import * as XLSX from "xlsx";
 import { deleteProjectFile, uploadProjectFiles } from "@/utils/api";
 import { createEmptyPreviewState, resolveFileUrl } from "@/features/project";
 
-export function useProjectFiles({ projectId, project, setProject, setSaving }) {
+export function useProjectFiles({ projectId, project, setProject }) {
   const [previewState, setPreviewState] = useState(createEmptyPreviewState);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
+  const [deletingFileId, setDeletingFileId] = useState(null);
   const fileInputRef = useRef(null);
 
   const relatedFiles = project?.relatedFiles ?? [];
@@ -28,7 +30,7 @@ export function useProjectFiles({ projectId, project, setProject, setSaving }) {
     const formData = new FormData();
     files.forEach((file) => formData.append("files", file));
 
-    setSaving(true);
+    setUploadingFiles(true);
 
     try {
       const updatedProject = await uploadProjectFiles(projectId, formData);
@@ -37,7 +39,7 @@ export function useProjectFiles({ projectId, project, setProject, setSaving }) {
     } catch (error) {
       message.error(error.message || "Không thể tải tệp lên");
     } finally {
-      setSaving(false);
+      setUploadingFiles(false);
       event.target.value = "";
     }
   };
@@ -89,7 +91,7 @@ export function useProjectFiles({ projectId, project, setProject, setSaving }) {
   };
 
   const handleDeleteProjectFile = async (fileId) => {
-    setSaving(true);
+    setDeletingFileId(fileId);
 
     try {
       const updatedProject = await deleteProjectFile(projectId, fileId);
@@ -98,7 +100,7 @@ export function useProjectFiles({ projectId, project, setProject, setSaving }) {
     } catch (error) {
       message.error(error.message || "Không thể xóa tệp liên quan");
     } finally {
-      setSaving(false);
+      setDeletingFileId(null);
     }
   };
 
@@ -219,6 +221,8 @@ export function useProjectFiles({ projectId, project, setProject, setSaving }) {
     fileInputRef,
     relatedFiles,
     activeExcelRows,
+    uploadingFiles,
+    deletingFileId,
     triggerFilePicker,
     handleProjectFileUpload,
     handleDownloadFile,

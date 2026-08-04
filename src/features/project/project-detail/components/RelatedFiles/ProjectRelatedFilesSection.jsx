@@ -17,7 +17,6 @@ export function ProjectRelatedFilesSection() {
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
   const {
-    saving,
     canManageTasks,
     triggerFilePicker,
     fileInputRef,
@@ -27,6 +26,8 @@ export function ProjectRelatedFilesSection() {
     handleDownloadFile,
     isAdmin,
     handleDeleteProjectFile,
+    uploadingFiles,
+    deletingFileId,
   } = useProjectDetailModel();
 
   return (
@@ -43,7 +44,7 @@ export function ProjectRelatedFilesSection() {
       }
       extra={
         !isMobile && canManageTasks ? (
-          <Button icon={<UploadOutlined />} type="primary" onClick={triggerFilePicker} loading={saving}>
+          <Button icon={<UploadOutlined />} type="primary" onClick={triggerFilePicker} loading={uploadingFiles}>
             Tải tệp lên
           </Button>
         ) : null
@@ -66,7 +67,7 @@ export function ProjectRelatedFilesSection() {
           type="primary"
           block
           onClick={triggerFilePicker}
-          loading={saving}
+          loading={uploadingFiles}
           style={{ marginBottom: 14 }}
         >
           Tải tệp lên
@@ -121,7 +122,8 @@ export function ProjectRelatedFilesSection() {
                           block
                           danger
                           onClick={() => handleDeleteProjectFile(file.id)}
-                          loading={saving}
+                          loading={deletingFileId === file.id}
+                          disabled={Boolean(uploadingFiles || deletingFileId)}
                         >
                           Xóa
                         </Button>
