@@ -36,7 +36,7 @@ function ProgressCards({
   rows,
   canManageTasks,
   openProgressRowEditor,
-  removeProgressRow,
+  confirmRemoveProgressRow,
   saving,
   isMobile,
 }) {
@@ -75,7 +75,7 @@ function ProgressCards({
                   <Button
                     size="small"
                     danger
-                    onClick={() => removeProgressRow(row.id)}
+                    onClick={() => confirmRemoveProgressRow(row.id, rowIndex)}
                     loading={saving}
                   >
                     Xóa
@@ -153,12 +153,13 @@ export function ProjectProgressSection() {
     removeProgressConfigColumn,
     saving,
     openProgressRowEditor,
-    removeProgressRow,
+    confirmRemoveProgressRow,
     canManageTasks,
     openProgressConfigEditor,
     progressRowEditor,
     setProgressRowEditor,
     submitProgressRowUpdate,
+    confirmRemoveProgressConfigColumn,
   } = useProjectDetailModel();
 
   return (
@@ -230,7 +231,7 @@ export function ProjectProgressSection() {
                 rows={progressSection.rows ?? []}
                 canManageTasks={canManageTasks}
                 openProgressRowEditor={openProgressRowEditor}
-                removeProgressRow={removeProgressRow}
+                confirmRemoveProgressRow={confirmRemoveProgressRow}
                 saving={saving}
                 isMobile={isMobile}
               />
@@ -297,7 +298,10 @@ export function ProjectProgressSection() {
                     updateProgressConfigColumnName(column.id, event.target.value)
                   }
                 />
-                <Button danger onClick={() => removeProgressConfigColumn(column.id)}>
+                <Button
+                  danger
+                  onClick={() => confirmRemoveProgressConfigColumn(column.id, column.name)}
+                >
                   Xóa
                 </Button>
               </Space.Compact>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { message } from "antd";
 
+import { confirmDeleteAction } from "@/utils/confirmDelete";
 import {
   getProgressFromProject,
   newProgressColumn,
@@ -92,6 +93,14 @@ export function useProjectProgress({ project, saveProject }) {
     );
   };
 
+  const confirmRemoveProgressRow = (rowId, rowIndex) => {
+    confirmDeleteAction({
+      title: "Xóa dòng tiến độ",
+      content: `Bạn có chắc muốn xóa dòng tiến độ ${rowIndex + 1}?`,
+      onOk: () => removeProgressRow(rowId),
+    });
+  };
+
   const openProgressConfigEditor = () => {
     const defaultColumns = PROGRESS_DEFAULT_COLUMNS.map((columnName) =>
       newProgressColumn(columnName),
@@ -132,6 +141,14 @@ export function useProjectProgress({ project, saveProject }) {
       ...current,
       columns: current.columns.filter((column) => column.id !== columnId),
     }));
+  };
+
+  const confirmRemoveProgressConfigColumn = (columnId, columnName) => {
+    confirmDeleteAction({
+      title: "Xóa tham số",
+      content: `Bạn có chắc muốn xóa tham số «${columnName || "này"}»?`,
+      onOk: () => removeProgressConfigColumn(columnId),
+    });
   };
 
   const submitProgressConfigUpdate = async () => {
@@ -186,10 +203,12 @@ export function useProjectProgress({ project, saveProject }) {
     openProgressRowEditor,
     submitProgressRowUpdate,
     removeProgressRow,
+    confirmRemoveProgressRow,
     openProgressConfigEditor,
     addProgressConfigColumn,
     updateProgressConfigColumnName,
     removeProgressConfigColumn,
+    confirmRemoveProgressConfigColumn,
     submitProgressConfigUpdate,
   };
 }

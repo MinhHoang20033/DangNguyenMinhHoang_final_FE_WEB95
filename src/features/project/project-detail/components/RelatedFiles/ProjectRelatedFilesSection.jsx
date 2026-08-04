@@ -25,7 +25,7 @@ export function ProjectRelatedFilesSection() {
     openFilePreview,
     handleDownloadFile,
     isAdmin,
-    handleDeleteProjectFile,
+    confirmDeleteProjectFile,
     uploadingFiles,
     deletingFileId,
   } = useProjectDetailModel();
@@ -121,7 +121,7 @@ export function ProjectRelatedFilesSection() {
                         <Button
                           block
                           danger
-                          onClick={() => handleDeleteProjectFile(file.id)}
+                          onClick={() => confirmDeleteProjectFile(file)}
                           loading={deletingFileId === file.id}
                           disabled={Boolean(uploadingFiles || deletingFileId)}
                         >

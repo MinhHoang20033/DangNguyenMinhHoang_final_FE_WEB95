@@ -32,7 +32,11 @@ export function ProjectMembersSection() {
     total,
     loadingEmployees,
     loadEmployeesError,
-    removeMember,
+    confirmRemoveMember,
+    addSelectedMembersToProject,
+    selectedEmployeeIds,
+    setSelectedEmployeeIds,
+    addingMembers,
     saving,
   } = useProjectDetailModel();
 
@@ -101,7 +105,7 @@ export function ProjectMembersSection() {
                       size="small"
                       icon={<DeleteOutlined />}
                       loading={saving}
-                      onClick={() => removeMember(member._id)}
+                      onClick={() => confirmRemoveMember(member)}
                     >
                       Xóa
                     </Button>
@@ -118,7 +122,19 @@ export function ProjectMembersSection() {
           open={memberToolboxOpen}
           title="Thêm thành viên"
           onCancel={closeMemberToolbox}
-          footer={null}
+          footer={
+            <Space wrap style={{ width: "100%", justifyContent: "flex-end" }}>
+              <Button onClick={closeMemberToolbox}>Hủy</Button>
+              <Button
+                type="primary"
+                disabled={!selectedEmployeeIds.length}
+                loading={addingMembers}
+                onClick={addSelectedMembersToProject}
+              >
+                Thêm {selectedEmployeeIds.length ? `${selectedEmployeeIds.length} thành viên` : "thành viên"}
+              </Button>
+            </Space>
+          }
           width={isMobile ? "100%" : 900}
           centered={!isMobile}
           style={isMobile ? { top: 8 } : undefined}
@@ -140,6 +156,11 @@ export function ProjectMembersSection() {
               dataSource={availableEmployees}
               loading={loadingEmployees}
               size={isMobile ? "small" : "middle"}
+              rowSelection={{
+                selectedRowKeys: selectedEmployeeIds,
+                onChange: setSelectedEmployeeIds,
+                preserveSelectedRowKeys: true,
+              }}
               pagination={{
                 current: page,
                 pageSize: PAGE_SIZE,

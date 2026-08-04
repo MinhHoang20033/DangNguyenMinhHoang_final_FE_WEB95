@@ -3,6 +3,7 @@ import { message } from "antd";
 import * as XLSX from "xlsx";
 
 import { deleteProjectFile, uploadProjectFiles } from "@/utils/api";
+import { confirmDeleteAction } from "@/utils/confirmDelete";
 import { createEmptyPreviewState, resolveFileUrl } from "@/features/project";
 
 export function useProjectFiles({ projectId, project, setProject }) {
@@ -102,6 +103,15 @@ export function useProjectFiles({ projectId, project, setProject }) {
     } finally {
       setDeletingFileId(null);
     }
+  };
+
+  const confirmDeleteProjectFile = (file) => {
+    const fileName = file.name || file.originalName || "tệp này";
+    confirmDeleteAction({
+      title: "Xóa tệp liên quan",
+      content: `Bạn có chắc muốn xóa «${fileName}»?`,
+      onOk: () => handleDeleteProjectFile(file.id),
+    });
   };
 
   const openFilePreview = async (file) => {
@@ -227,6 +237,7 @@ export function useProjectFiles({ projectId, project, setProject }) {
     handleProjectFileUpload,
     handleDownloadFile,
     handleDeleteProjectFile,
+    confirmDeleteProjectFile,
     openFilePreview,
     closePreview,
     handleExcelSheetChange,

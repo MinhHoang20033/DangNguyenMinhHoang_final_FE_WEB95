@@ -218,7 +218,14 @@ export function TaskCardList({
                                       size="small"
                                       danger
                                       icon={<DeleteOutlined />}
-                                      onClick={() => handleDeleteTaskFile(task.id, file.id, "files")}
+                                      onClick={() =>
+                                        handleDeleteTaskFile(
+                                          task.id,
+                                          file.id,
+                                          "files",
+                                          file.name || file.originalName || "tệp này",
+                                        )
+                                      }
                                     >
                                       Xóa
                                     </Button>
@@ -266,7 +273,12 @@ export function TaskCardList({
                                       danger
                                       icon={<DeleteOutlined />}
                                       onClick={() =>
-                                        handleDeleteTaskFile(task.id, file.id, "submissionFiles")
+                                        handleDeleteTaskFile(
+                                          task.id,
+                                          file.id,
+                                          "submissionFiles",
+                                          file.name || file.originalName || "tệp này",
+                                        )
                                       }
                                     >
                                       Xóa

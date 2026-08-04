@@ -3,6 +3,7 @@ import { DeleteOutlined } from "@ant-design/icons";
 import { Avatar, Button, Space } from "antd";
 
 import { getEmployees } from "@/utils/api";
+import { confirmDeleteAction } from "@/utils/confirmDelete";
 import { EMPTY_VALUE } from "@/features/project";
 
 const PAGE_SIZE = 10;
@@ -15,6 +16,8 @@ export function useProjectMembers({ project, isAdmin, saving, saveProject, setEm
   const [availableEmployees, setAvailableEmployees] = useState([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [loadEmployeesError, setLoadEmployeesError] = useState(null);
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState([]);
+  const [addingMembers, setAddingMembers] = useState(false);
 
   const memberEmployeeIdKey = useMemo(
     () =>
@@ -67,6 +70,7 @@ export function useProjectMembers({ project, isAdmin, saving, saveProject, setEm
   const openMemberToolbox = () => {
     setSearch("");
     setPage(1);
+    setSelectedEmployeeIds([]);
     setMemberToolboxOpen(true);
   };
 
@@ -74,6 +78,7 @@ export function useProjectMembers({ project, isAdmin, saving, saveProject, setEm
     setMemberToolboxOpen(false);
     setSearch("");
     setPage(1);
+    setSelectedEmployeeIds([]);
   };
 
   const handleSearchChange = (value) => {
@@ -104,6 +109,57 @@ export function useProjectMembers({ project, isAdmin, saving, saveProject, setEm
     closeMemberToolbox();
   };
 
+  const addSelectedMembersToProject = async () => {
+    if (!selectedEmployeeIds.length) {
+      return;
+    }
+
+    const existingIds = new Set((project?.members ?? []).map((member) => member.employeeId));
+    const idsToAdd = selectedEmployeeIds.filter((employeeId) => !existingIds.has(employeeId));
+
+    if (!idsToAdd.length) {
+      return;
+    }
+
+    setAddingMembers(true);
+
+    try {
+      const updated = await saveProject(
+        (fresh) => ({
+          members: [
+            ...(fresh.members ?? []),
+            ...idsToAdd.map((employeeId) => ({ employeeId })),
+          ],
+        }),
+        `Đã thêm ${idsToAdd.length} thành viên`,
+      );
+
+      if (!updated) {
+        return;
+      }
+
+      const selectedEmployees = availableEmployees.filter((employee) =>
+        selectedEmployeeIds.includes(employee._id),
+      );
+
+      if (selectedEmployees.length) {
+        setEmployees((current) => {
+          const next = [...current];
+          selectedEmployees.forEach((employee) => {
+            if (!next.some((item) => item._id === employee._id)) {
+              next.push(employee);
+            }
+          });
+          return next;
+        });
+      }
+
+      closeMemberToolbox();
+    } finally {
+      setAddingMembers(false);
+    }
+  };
+
   const removeMember = async (employeeId) => {
     await saveProject(
       (fresh) => ({
@@ -111,6 +167,14 @@ export function useProjectMembers({ project, isAdmin, saving, saveProject, setEm
       }),
       "Đã xóa thành viên",
     );
+  };
+
+  const confirmRemoveMember = (employee) => {
+    confirmDeleteAction({
+      title: "Xóa thành viên",
+      content: `Bạn có chắc muốn xóa «${employee.name || "thành viên này"}» khỏi dự án?`,
+      onOk: () => removeMember(employee._id),
+    });
   };
 
   const employeeColumns = [
@@ -139,15 +203,6 @@ export function useProjectMembers({ project, isAdmin, saving, saveProject, setEm
       dataIndex: "role",
       width: 140,
       render: (value) => value || EMPTY_VALUE,
-    },
-    {
-      title: "Thao tác",
-      render: (_, record) => (
-        <Button type="primary" onClick={() => addMemberToProject(record)}>
-          Thêm vào dự án
-        </Button>
-      ),
-      width: 180,
     },
   ];
 
@@ -187,7 +242,7 @@ export function useProjectMembers({ project, isAdmin, saving, saveProject, setEm
               size="small"
               danger
               icon={<DeleteOutlined />}
-              onClick={() => removeMember(record._id)}
+              onClick={() => confirmRemoveMember(record)}
               loading={saving}
             >
               Xóa
@@ -211,7 +266,12 @@ export function useProjectMembers({ project, isAdmin, saving, saveProject, setEm
     loadEmployeesError,
     availableEmployees,
     addMemberToProject,
+    addSelectedMembersToProject,
+    selectedEmployeeIds,
+    setSelectedEmployeeIds,
+    addingMembers,
     removeMember,
+    confirmRemoveMember,
     employeeColumns,
     memberColumns,
   };

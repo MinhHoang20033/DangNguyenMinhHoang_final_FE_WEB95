@@ -8,6 +8,7 @@ import {
   uploadTaskFiles,
   uploadTaskSubmissionFiles,
 } from "@/utils/api";
+import { confirmDeleteAction } from "@/utils/confirmDelete";
 import {
   filterTaskExcelFiles,
   filterVisibleTasks,
@@ -149,6 +150,14 @@ export function useProjectTasks({
     } finally {
       setSaving(false);
     }
+  };
+
+  const confirmDeleteTaskFile = (taskId, fileId, scope = "files", fileName = "tệp này") => {
+    confirmDeleteAction({
+      title: scope === "submissionFiles" ? "Xóa file hoàn thành" : "Xóa file đính kèm",
+      content: `Bạn có chắc muốn xóa «${fileName}»?`,
+      onOk: () => handleDeleteTaskFile(taskId, fileId, scope),
+    });
   };
 
   const openTaskEditor = (task = null) => {
@@ -447,6 +456,7 @@ export function useProjectTasks({
     triggerTaskFilePicker,
     handleTaskRowFileUpload,
     handleDeleteTaskFile,
+    confirmDeleteTaskFile,
     toggleTaskCompletion,
     openSubtaskEditor,
     submitSubtaskUpdate,
