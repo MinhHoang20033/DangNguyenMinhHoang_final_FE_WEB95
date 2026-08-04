@@ -129,7 +129,7 @@ export const computeDashboardData = (projects, employees) => {
 
   const recentProjects = [...projects]
     .sort((left, right) => getProjectCreatedAt(right) - getProjectCreatedAt(left))
-    .slice(0, 9);
+    .slice(0, 6);
 
   const projectsByTasks = [...projects]
     .sort((left, right) => (right.tasks?.length ?? 0) - (left.tasks?.length ?? 0))
