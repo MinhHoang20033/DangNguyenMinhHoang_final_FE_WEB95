@@ -1,4 +1,4 @@
-import { DownloadOutlined, EyeOutlined } from "@ant-design/icons";
+import { DeleteOutlined, DownloadOutlined, EditOutlined, EyeOutlined } from "@ant-design/icons";
 import { Avatar, Button, Checkbox, Collapse, Space, Tag, Typography } from "antd";
 
 import { EMPTY_VALUE, TASK_EXCEL_ACCEPT } from "@/features/project";
@@ -140,13 +140,13 @@ export function TaskCardList({
                 </Checkbox>
                 {canManageTasks ? (
                   <>
-                    <Button type="link" size="small" onClick={() => openTaskEditor(task)}>
+                    <Button size="small" icon={<EditOutlined />} onClick={() => openTaskEditor(task)}>
                       Sửa
                     </Button>
                     <Button
-                      type="link"
                       size="small"
                       danger
+                      icon={<DeleteOutlined />}
                       onClick={() => confirmRemoveTask(task.id, task.title)}
                       loading={saving}
                     >
@@ -215,9 +215,9 @@ export function TaskCardList({
                                   </Button>
                                   {canManageTasks ? (
                                     <Button
-                                      type="link"
                                       size="small"
                                       danger
+                                      icon={<DeleteOutlined />}
                                       onClick={() => handleDeleteTaskFile(task.id, file.id, "files")}
                                     >
                                       Xóa
@@ -262,9 +262,9 @@ export function TaskCardList({
                                     canManageTasks,
                                   ) ? (
                                     <Button
-                                      type="link"
                                       size="small"
                                       danger
+                                      icon={<DeleteOutlined />}
                                       onClick={() =>
                                         handleDeleteTaskFile(task.id, file.id, "submissionFiles")
                                       }
@@ -328,16 +328,16 @@ export function TaskCardList({
                                   {canManageTasks ? (
                                     <Space size="small">
                                       <Button
-                                        type="link"
                                         size="small"
+                                        icon={<EditOutlined />}
                                         onClick={() => openSubtaskEditor(task.id, subtask)}
                                       >
                                         Sửa
                                       </Button>
                                       <Button
-                                        type="link"
                                         size="small"
                                         danger
+                                        icon={<DeleteOutlined />}
                                         onClick={() =>
                                           confirmRemoveSubtask(task.id, subtask.id, subtask.title)
                                         }

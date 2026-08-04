@@ -1,4 +1,4 @@
-import { DownloadOutlined, EyeOutlined } from "@ant-design/icons";
+import { DeleteOutlined, DownloadOutlined, EditOutlined, EyeOutlined } from "@ant-design/icons";
 import { Avatar, Button, Checkbox, Space, Tag, Typography } from "antd";
 
 import {
@@ -133,9 +133,9 @@ export function buildTaskTableColumns({
                 </Button>
                 {canManageTasks ? (
                   <Button
-                    type="link"
                     size="small"
                     danger
+                    icon={<DeleteOutlined />}
                     onClick={() => handleDeleteTaskFile(task.id, file.id, "files")}
                   >
                     Xóa
@@ -170,9 +170,9 @@ export function buildTaskTableColumns({
                 </Button>
                 {canDeleteTaskSubmissionFile(task, file, userEmployeeId, canManageTasks) ? (
                   <Button
-                    type="link"
                     size="small"
                     danger
+                    icon={<DeleteOutlined />}
                     onClick={() => handleDeleteTaskFile(task.id, file.id, "submissionFiles")}
                   >
                     Xóa
@@ -237,16 +237,16 @@ export function buildTaskTableColumns({
                   {canManageTasks ? (
                     <Space size="small">
                       <Button
-                        type="link"
                         size="small"
+                        icon={<EditOutlined />}
                         onClick={() => openSubtaskEditor(task.id, subtask)}
                       >
                         Sửa
                       </Button>
                       <Button
-                        type="link"
                         size="small"
                         danger
+                        icon={<DeleteOutlined />}
                         onClick={() => confirmRemoveSubtask(task.id, subtask.id, subtask.title)}
                       >
                         Xóa
@@ -278,12 +278,13 @@ export function buildTaskTableColumns({
           </Checkbox>
           {canManageTasks ? (
             <>
-              <Button type="text" onClick={() => openTaskEditor(task)}>
-                Chỉnh sửa
+              <Button size="small" icon={<EditOutlined />} onClick={() => openTaskEditor(task)}>
+                Sửa
               </Button>
               <Button
-                type="text"
+                size="small"
                 danger
+                icon={<DeleteOutlined />}
                 onClick={() => confirmRemoveTask(task.id, task.title)}
                 loading={saving}
               >

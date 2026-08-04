@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { DeleteOutlined } from "@ant-design/icons";
 import { Avatar, Button, Space } from "antd";
 
 import { getEmployees } from "@/utils/api";
@@ -182,7 +183,13 @@ export function useProjectMembers({ project, isAdmin, saving, saveProject, setEm
       render: (_, record) =>
         isAdmin ? (
           <Space size="small" wrap>
-            <Button size="small" danger onClick={() => removeMember(record._id)} loading={saving}>
+            <Button
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => removeMember(record._id)}
+              loading={saving}
+            >
               Xóa
             </Button>
           </Space>

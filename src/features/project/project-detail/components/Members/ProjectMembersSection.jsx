@@ -1,3 +1,4 @@
+import { DeleteOutlined } from "@ant-design/icons";
 import { Avatar, Button, Card, Empty, Grid, Input, Modal, Space, Table, Typography } from "antd";
 
 import { EMPTY_VALUE } from "@/features/project";
@@ -97,7 +98,8 @@ export function ProjectMembersSection() {
                   {isAdmin && (
                     <Button
                       danger
-                      type="link"
+                      size="small"
+                      icon={<DeleteOutlined />}
                       loading={saving}
                       onClick={() => removeMember(member._id)}
                     >
