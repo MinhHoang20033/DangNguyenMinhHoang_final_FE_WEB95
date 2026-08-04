@@ -46,111 +46,95 @@ function ProgressCards({
 
   return (
     <Space direction="vertical" size={10} style={{ width: "100%" }}>
-      {rows.map((row, rowIndex) => {
-        const primaryColumn = columns[0];
-        const primaryValue = primaryColumn
-          ? row.values?.[primaryColumn.id] || EMPTY_VALUE
-          : `Dòng ${rowIndex + 1}`;
-        const detailColumns = columns.slice(primaryColumn ? 1 : 0);
-
-        return (
+      {rows.map((row, rowIndex) => (
+        <div
+          key={row.id}
+          style={{
+            ...cardShellStyle,
+            padding: isMobile ? 12 : 14,
+          }}
+        >
           <div
-            key={row.id}
             style={{
-              ...cardShellStyle,
-              padding: isMobile ? 12 : 14,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 10,
+              marginBottom: 10,
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 10,
-                marginBottom: 10,
-              }}
-            >
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  Dòng {rowIndex + 1}
-                  {primaryColumn?.name ? ` · ${primaryColumn.name}` : ""}
-                </Text>
-                <div>
-                  <Text strong style={{ fontSize: 15, wordBreak: "break-word" }}>
-                    {primaryValue}
-                  </Text>
-                </div>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              Dòng {rowIndex + 1}
+            </Text>
+            <Space size="small" wrap>
+              {canManageTasks && (
+                <>
+                  <Button size="small" onClick={() => openProgressRowEditor(row.id)}>
+                    Cập nhật
+                  </Button>
+                  <Button
+                    size="small"
+                    danger
+                    onClick={() => removeProgressRow(row.id)}
+                    loading={saving}
+                  >
+                    Xóa
+                  </Button>
+                </>
+              )}
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 10,
+                  background: "#eff6ff",
+                  color: "#1d4ed8",
+                  display: "grid",
+                  placeItems: "center",
+                  fontWeight: 700,
+                  border: "1px solid #bfdbfe",
+                }}
+              >
+                {rowIndex + 1}
               </div>
-              <Space size="small" wrap>
-                {canManageTasks && (
-                  <>
-                    <Button size="small" onClick={() => openProgressRowEditor(row.id)}>
-                      Cập nhật
-                    </Button>
-                    <Button
-                      size="small"
-                      danger
-                      onClick={() => removeProgressRow(row.id)}
-                      loading={saving}
-                    >
-                      Xóa
-                    </Button>
-                  </>
-                )}
+            </Space>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              gap: 8,
+              overflowX: "auto",
+              WebkitOverflowScrolling: "touch",
+            }}
+          >
+            {columns.map((column) => {
+              const value = row.values?.[column.id];
+              return (
                 <div
+                  key={`${row.id}-${column.id}`}
                   style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 10,
-                    background: "#eff6ff",
-                    color: "#1d4ed8",
-                    display: "grid",
-                    placeItems: "center",
-                    fontWeight: 700,
-                    border: "1px solid #bfdbfe",
+                    flex: isMobile ? "0 0 180px" : "1 1 0",
+                    minWidth: isMobile ? 180 : 140,
+                    borderRadius: 12,
+                    background: "#fff",
+                    border: "1px solid #eef2f7",
+                    padding: "8px 10px",
                   }}
                 >
-                  {rowIndex + 1}
+                  <Text type="secondary" style={{ display: "block", fontSize: 11, marginBottom: 4 }}>
+                    {column.name || "Tham số"}
+                  </Text>
+                  <Text style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 13 }}>
+                    {value || EMPTY_VALUE}
+                  </Text>
                 </div>
-              </Space>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                gap: 8,
-                overflowX: "auto",
-                WebkitOverflowScrolling: "touch",
-              }}
-            >
-              {detailColumns.map((column) => {
-                const value = row.values?.[column.id];
-                return (
-                  <div
-                    key={`${row.id}-${column.id}`}
-                    style={{
-                      flex: isMobile ? "0 0 180px" : "1 1 0",
-                      minWidth: isMobile ? 180 : 140,
-                      borderRadius: 12,
-                      background: "#fff",
-                      border: "1px solid #eef2f7",
-                      padding: "8px 10px",
-                    }}
-                  >
-                    <Text type="secondary" style={{ display: "block", fontSize: 11, marginBottom: 4 }}>
-                      {column.name || "Tham số"}
-                    </Text>
-                    <Text style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 13 }}>
-                      {value || EMPTY_VALUE}
-                    </Text>
-                  </div>
-                );
-              })}
-            </div>
+              );
+            })}
           </div>
-        );
-      })}
+        </div>
+      ))}
     </Space>
   );
 }
