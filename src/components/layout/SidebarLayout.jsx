@@ -24,6 +24,21 @@ export default function SidebarLayout() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const isProjectDetailPage =
     location.pathname.startsWith("/projects/") && location.pathname !== "/projects";
+  const selectedMenuKey = useMemo(() => {
+    if (location.pathname.startsWith("/projects")) {
+      return "/projects";
+    }
+    if (location.pathname.startsWith("/employees")) {
+      return "/employees";
+    }
+    if (location.pathname.startsWith("/partners")) {
+      return "/partners";
+    }
+    if (location.pathname.startsWith("/dashboard")) {
+      return "/dashboard";
+    }
+    return location.pathname;
+  }, [location.pathname]);
 
   const menuItems = useMemo(() => {
     const items = [];
@@ -103,7 +118,7 @@ export default function SidebarLayout() {
             <Menu
               theme="dark"
               mode="inline"
-              selectedKeys={[location.pathname]}
+              selectedKeys={[selectedMenuKey]}
               items={menuItems}
               onClick={handleMenuClick}
             />

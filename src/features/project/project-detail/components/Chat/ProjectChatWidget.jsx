@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { CloseOutlined, CommentOutlined, SendOutlined } from "@ant-design/icons";
-import { Button, Card, Empty, Input, Space, Spin, Typography } from "antd";
+import { Button, Card, Empty, Grid, Input, Space, Spin, Typography } from "antd";
 
 import { formatDateTime } from "@/features/project";
 import { useProjectDetailModel } from "../../ProjectDetailContext.jsx";
@@ -37,6 +37,8 @@ export function ProjectChatWidget() {
     loadOlderMessages,
   } = useProjectDetailModel();
 
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
   const scrollRef = useRef(null);
   const isNearBottomRef = useRef(true);
   const skipAutoScrollRef = useRef(false);
@@ -95,25 +97,42 @@ export function ProjectChatWidget() {
     });
   };
 
+  const fabBottom = isMobile ? "max(20px, env(safe-area-inset-bottom))" : 24;
+  const panelStyle = isMobile
+    ? {
+        position: "fixed",
+        left: 12,
+        right: 12,
+        bottom: "calc(84px + env(safe-area-inset-bottom))",
+        width: "auto",
+        zIndex: 1000,
+        boxShadow: "0 16px 40px rgba(15, 23, 42, 0.18)",
+        borderRadius: 16,
+      }
+    : {
+        position: "fixed",
+        right: 24,
+        bottom: 96,
+        width: 360,
+        zIndex: 1000,
+        boxShadow: "0 16px 40px rgba(15, 23, 42, 0.18)",
+      };
+
   return (
     <>
       {chatOpen && (
         <Card
           title="Hộp chat"
           extra={<Button type="text" icon={<CloseOutlined />} onClick={closeChat} />}
-          style={{
-            position: "fixed",
-            right: 24,
-            bottom: 96,
-            width: 360,
-            zIndex: 1000,
-            boxShadow: "0 16px 40px rgba(15, 23, 42, 0.18)",
-          }}
-          bodyStyle={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 12,
-            height: 420,
+          style={panelStyle}
+          styles={{
+            body: {
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+              height: isMobile ? "min(58dvh, 420px)" : 420,
+              paddingBottom: isMobile ? 12 : undefined,
+            },
           }}
         >
           <div
@@ -123,6 +142,7 @@ export function ProjectChatWidget() {
               flex: 1,
               overflowY: "auto",
               paddingRight: 4,
+              WebkitOverflowScrolling: "touch",
             }}
           >
             {loadingMessages ? (
@@ -153,6 +173,7 @@ export function ProjectChatWidget() {
                       style={{
                         alignSelf: ownMessage ? "flex-end" : "flex-start",
                         maxWidth: "85%",
+                        marginLeft: ownMessage ? "auto" : 0,
                       }}
                     >
                       <Text type="secondary" style={{ fontSize: 12 }}>
@@ -208,8 +229,8 @@ export function ProjectChatWidget() {
         onClick={() => setChatOpen((current) => !current)}
         style={{
           position: "fixed",
-          right: 24,
-          bottom: 24,
+          right: isMobile ? 16 : 24,
+          bottom: fabBottom,
           width: 56,
           height: 56,
           zIndex: 1001,

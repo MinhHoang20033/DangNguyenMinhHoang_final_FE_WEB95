@@ -1,5 +1,5 @@
 import { DownloadOutlined, EyeOutlined, UploadOutlined } from "@ant-design/icons";
-import { Button, Card, Empty, Space, Typography } from "antd";
+import { Button, Card, Empty, Grid, Space, Typography } from "antd";
 
 import { formatDateTime, formatFileSize, getFileIcon, getFileTypeLabel } from "@/features/project";
 import { useProjectDetailModel } from "../../ProjectDetailContext.jsx";
@@ -7,6 +7,8 @@ import { useProjectDetailModel } from "../../ProjectDetailContext.jsx";
 const { Text } = Typography;
 
 export function ProjectRelatedFilesSection() {
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
   const {
     saving,
     canManageTasks,
@@ -26,7 +28,7 @@ export function ProjectRelatedFilesSection() {
       extra={
         canManageTasks ? (
           <Button icon={<UploadOutlined />} onClick={triggerFilePicker} loading={saving}>
-            Tải tệp lên
+            {isMobile ? "Tải lên" : "Tải tệp lên"}
           </Button>
         ) : null
       }
@@ -41,20 +43,39 @@ export function ProjectRelatedFilesSection() {
       />
 
       {relatedFiles.length ? (
-        <div style={{ overflowX: "auto", overflowY: "hidden", paddingBottom: 8 }}>
-          <div style={{ display: "flex", gap: 16, width: "max-content" }}>
+        <div
+          style={
+            isMobile
+              ? { display: "flex", flexDirection: "column", gap: 12 }
+              : { overflowX: "auto", overflowY: "hidden", paddingBottom: 8 }
+          }
+        >
+          <div
+            style={
+              isMobile
+                ? { display: "flex", flexDirection: "column", gap: 12 }
+                : { display: "flex", gap: 16, width: "max-content" }
+            }
+          >
             {relatedFiles.map((file) => (
               <Card
                 key={file.id}
                 size="small"
-                style={{ width: 280, minWidth: 280, borderRadius: 14, flex: "0 0 auto" }}
-                bodyStyle={{ padding: 16 }}
+                style={{
+                  width: isMobile ? "100%" : 280,
+                  minWidth: isMobile ? undefined : 280,
+                  borderRadius: 14,
+                  flex: isMobile ? undefined : "0 0 auto",
+                }}
+                styles={{ body: { padding: 16 } }}
               >
                 <Space direction="vertical" size={10} style={{ width: "100%" }}>
-                  <Space>
+                  <Space align="start">
                     <span style={{ fontSize: 20, lineHeight: 1 }}>{getFileIcon(file)}</span>
-                    <div>
-                      <Text strong>{file.name || file.originalName || "Tệp đính kèm"}</Text>
+                    <div style={{ minWidth: 0 }}>
+                      <Text strong style={{ wordBreak: "break-word" }}>
+                        {file.name || file.originalName || "Tệp đính kèm"}
+                      </Text>
                       <div>
                         <Text type="secondary">
                           {getFileTypeLabel(file)} • {formatFileSize(file.size)}
@@ -69,11 +90,20 @@ export function ProjectRelatedFilesSection() {
                     <Button block icon={<EyeOutlined />} onClick={() => openFilePreview(file)}>
                       Xem trước
                     </Button>
-                    <Button block icon={<DownloadOutlined />} onClick={() => handleDownloadFile(file)}>
+                    <Button
+                      block
+                      icon={<DownloadOutlined />}
+                      onClick={() => handleDownloadFile(file)}
+                    >
                       Tải tệp
                     </Button>
                     {isAdmin && (
-                      <Button block danger onClick={() => handleDeleteProjectFile(file.id)} loading={saving}>
+                      <Button
+                        block
+                        danger
+                        onClick={() => handleDeleteProjectFile(file.id)}
+                        loading={saving}
+                      >
                         Xóa
                       </Button>
                     )}

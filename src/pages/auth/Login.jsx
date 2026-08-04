@@ -1,5 +1,5 @@
-import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
 import { Button, Card, Form, Input, message, Typography } from "antd";
 import { AuthContext } from "@/context/AuthContextValue";
 import { login as apiLogin } from "@/utils/api";
@@ -29,36 +29,32 @@ export default function Login() {
   };
 
   return (
-    <Card
-      title="Đăng nhập quản lý dự án"
-      style={{
-        width: 350,
-        margin: "120px auto",
-      }}
-    >
-      <Form onFinish={onFinish} layout="vertical" requiredMark={false}>
-        <Form.Item
-          name="username"
-          rules={[{ required: true, message: "Vui lòng nhập tên đăng nhập" }]}
-        >
-          <Input placeholder="Tên đăng nhập" />
-        </Form.Item>
+    <div className="auth-page">
+      <Card title="Đăng nhập quản lý dự án" className="auth-card">
+        <Form onFinish={onFinish} layout="vertical" requiredMark={false} size="large">
+          <Form.Item
+            name="username"
+            rules={[{ required: true, message: "Vui lòng nhập tên đăng nhập" }]}
+          >
+            <Input placeholder="Tên đăng nhập" autoComplete="username" />
+          </Form.Item>
 
-        <Form.Item
-          name="password"
-          rules={[{ required: true, message: "Vui lòng nhập mật khẩu" }]}
-        >
-          <Input.Password placeholder="Mật khẩu" />
-        </Form.Item>
+          <Form.Item
+            name="password"
+            rules={[{ required: true, message: "Vui lòng nhập mật khẩu" }]}
+          >
+            <Input.Password placeholder="Mật khẩu" autoComplete="current-password" />
+          </Form.Item>
 
-        <Button type="primary" htmlType="submit" block>
-          Đăng nhập
-        </Button>
-      </Form>
+          <Button type="primary" htmlType="submit" block>
+            Đăng nhập
+          </Button>
+        </Form>
 
-      <div style={{ marginTop: 16, textAlign: "right" }}>
-        <Link onClick={() => navigate("/forgot-password")}>Quên mật khẩu?</Link>
-      </div>
-    </Card>
+        <div style={{ marginTop: 16, textAlign: "right" }}>
+          <Link onClick={() => navigate("/forgot-password")}>Quên mật khẩu?</Link>
+        </div>
+      </Card>
+    </div>
   );
 }

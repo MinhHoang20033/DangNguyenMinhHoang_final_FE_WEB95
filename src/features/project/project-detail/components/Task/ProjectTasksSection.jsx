@@ -1,11 +1,14 @@
-import { Button, Card, Empty, Table } from "antd";
+import { Button, Card, Empty, Grid, Table } from "antd";
 
 import { useProjectDetailModel } from "../../ProjectDetailContext.jsx";
 import { SubtaskEditorModal } from "./SubtaskEditorModal.jsx";
 import { TaskEditorModal } from "./TaskEditorModal.jsx";
+import { TaskMobileList } from "./TaskMobileList.jsx";
 import { buildTaskTableColumns } from "./taskTableColumns.jsx";
 
 export function ProjectTasksSection() {
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
   const {
     sortedTasks,
     openTaskEditor,
@@ -38,7 +41,7 @@ export function ProjectTasksSection() {
     uploadingTaskId,
   } = useProjectDetailModel();
 
-  const taskColumns = buildTaskTableColumns({
+  const taskColumnProps = {
     getTaskAssignees,
     openFilePreview,
     handleDownloadFile,
@@ -56,7 +59,9 @@ export function ProjectTasksSection() {
     confirmRemoveTask,
     saving,
     uploadingTaskId,
-  });
+  };
+
+  const taskColumns = buildTaskTableColumns(taskColumnProps);
 
   const emptyDescription = canManageTasks
     ? "Chưa có task trong dự án"
@@ -71,18 +76,24 @@ export function ProjectTasksSection() {
         title="Công việc dự án"
         extra={
           canManageTasks ? (
-            <Button onClick={() => openTaskEditor()}>Thêm task</Button>
+            <Button block={isMobile} onClick={() => openTaskEditor()}>
+              Thêm task
+            </Button>
           ) : null
         }
       >
         {sortedTasks.length ? (
-          <Table
-            rowKey="id"
-            columns={taskColumns}
-            dataSource={sortedTasks}
-            pagination={false}
-            scroll={{ x: 1700, y: 420 }}
-          />
+          isMobile ? (
+            <TaskMobileList tasks={sortedTasks} {...taskColumnProps} />
+          ) : (
+            <Table
+              rowKey="id"
+              columns={taskColumns}
+              dataSource={sortedTasks}
+              pagination={false}
+              scroll={{ x: 1700, y: 420 }}
+            />
+          )
         ) : (
           <Empty description={emptyDescription} />
         )}

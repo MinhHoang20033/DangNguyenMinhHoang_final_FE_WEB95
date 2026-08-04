@@ -1,7 +1,7 @@
 
 
 import { DownloadOutlined } from "@ant-design/icons";
-import { Button, Card, Col, Row, Space, Typography } from "antd";
+import { Button, Card, Col, Grid, Row, Space, Typography } from "antd";
 import { exportProjectToExcel } from "@/features/project";
 
 import { ProjectActivityLogsSection } from "./components/ActivityLogs/ProjectActivityLogsSection.jsx";
@@ -20,6 +20,8 @@ const { Title, Text } = Typography;
 
 export default function ProjectDetailView() {
   const props = useProjectDetailModel();
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
   const {
     isAdmin,
     project,
@@ -40,32 +42,42 @@ export default function ProjectDetailView() {
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      {}
       <div>
-        <Space align="start" style={{ width: "100%", justifyContent: "space-between" }}>
+        <Space
+          direction={isMobile ? "vertical" : "horizontal"}
+          align={isMobile ? "stretch" : "start"}
+          style={{ width: "100%", justifyContent: "space-between" }}
+          size="middle"
+        >
           <div>
-            <Title level={2} style={{ marginBottom: 4 }}>
+            <Title level={isMobile ? 3 : 2} style={{ marginBottom: 4, wordBreak: "break-word" }}>
               {project.name || "Chi tiết dự án"}
             </Title>
             <Text type="secondary">Thông tin và nhật ký công việc của dự án.</Text>
           </div>
 
-          <Space>
-            {isAdmin && <Button onClick={openOverviewEditor}>Cập nhật thông tin</Button>}
-            {canManageTasks && (
-              <Button
-                icon={<DownloadOutlined />}
-                onClick={() => exportProjectToExcel(project, memberEmployees)}
-              >
-                Xuất Excel
-              </Button>
-            )}
-          </Space>
+          <div className={isMobile ? "mobile-stack-actions" : undefined}>
+            <Space wrap style={{ width: isMobile ? "100%" : "auto" }}>
+              {isAdmin && (
+                <Button block={isMobile} onClick={openOverviewEditor}>
+                  Cập nhật thông tin
+                </Button>
+              )}
+              {canManageTasks && (
+                <Button
+                  block={isMobile}
+                  icon={<DownloadOutlined />}
+                  onClick={() => exportProjectToExcel(project, memberEmployees)}
+                >
+                  Xuất Excel
+                </Button>
+              )}
+            </Space>
+          </div>
         </Space>
       </div>
 
-      {}
-      <Row gutter={[24, 24]} align="stretch">
+      <Row gutter={[16, 16]} align="stretch">
         <Col xs={24} xl={10}>
           <ProjectOverviewSection />
         </Col>
@@ -77,7 +89,6 @@ export default function ProjectDetailView() {
         </Col>
       </Row>
 
-      {}
       <PreviewSectionErrorBoundary>
         <Space direction="vertical" size={24} style={{ width: "100%" }}>
           <ProjectRelatedFilesSection />
@@ -95,7 +106,6 @@ export default function ProjectDetailView() {
 
       <ProjectActivityLogsSection />
 
-      {}
       {isAdmin && (
         <OverviewEditorModal
           open={overviewOpen}

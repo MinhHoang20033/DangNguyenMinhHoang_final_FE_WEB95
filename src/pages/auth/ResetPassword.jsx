@@ -28,33 +28,29 @@ export default function ResetPassword() {
   };
 
   return (
-    <Card
-      title="Đổi Mật Khẩu"
-      style={{
-        width: 420,
-        margin: "80px auto",
-      }}
-    >
-      <Form layout="vertical" onFinish={handleResetPassword}>
-        <Form.Item
-          name="newPassword"
-          label="Mật khẩu mới"
-          rules={[
-            { required: true, message: "Vui lòng nhập mật khẩu mới" },
-            { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự" },
-          ]}
-        >
-          <Input.Password placeholder="Nhập mật khẩu mới" />
-        </Form.Item>
+    <div className="auth-page">
+      <Card title="Đổi Mật Khẩu" className="auth-card">
+        <Form layout="vertical" onFinish={handleResetPassword} size="large">
+          <Form.Item
+            name="newPassword"
+            label="Mật khẩu mới"
+            rules={[
+              { required: true, message: "Vui lòng nhập mật khẩu mới" },
+              { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự" },
+            ]}
+          >
+            <Input.Password placeholder="Nhập mật khẩu mới" autoComplete="new-password" />
+          </Form.Item>
 
-        <Button type="primary" htmlType="submit" block>
-          Đổi mật khẩu
-        </Button>
-      </Form>
+          <Button type="primary" htmlType="submit" block>
+            Đổi mật khẩu
+          </Button>
+        </Form>
 
-      <div style={{ marginTop: 16 }}>
-        <Link onClick={() => navigate("/login")}>Quay lại đăng nhập</Link>
-      </div>
-    </Card>
+        <div style={{ marginTop: 16 }}>
+          <Link onClick={() => navigate("/login")}>Quay lại đăng nhập</Link>
+        </div>
+      </Card>
+    </div>
   );
 }

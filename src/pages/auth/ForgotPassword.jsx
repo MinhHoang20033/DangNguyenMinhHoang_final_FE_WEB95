@@ -25,33 +25,29 @@ export default function ForgotPassword() {
   };
 
   return (
-    <Card
-      title="Khôi Phục Mật Khẩu"
-      style={{
-        width: 420,
-        margin: "80px auto",
-      }}
-    >
-      <Form layout="vertical" onFinish={handleRequestOtp}>
-        <Form.Item
-          name="email"
-          label="Email nhân viên"
-          rules={[
-            { required: true, message: "Vui lòng nhập email nhân viên" },
-            { type: "email", message: "Email không hợp lệ" },
-          ]}
-        >
-          <Input placeholder="Nhập email nhân viên" />
-        </Form.Item>
+    <div className="auth-page">
+      <Card title="Khôi Phục Mật Khẩu" className="auth-card">
+        <Form layout="vertical" onFinish={handleRequestOtp} size="large">
+          <Form.Item
+            name="email"
+            label="Email nhân viên"
+            rules={[
+              { required: true, message: "Vui lòng nhập email nhân viên" },
+              { type: "email", message: "Email không hợp lệ" },
+            ]}
+          >
+            <Input placeholder="Nhập email nhân viên" inputMode="email" autoComplete="email" />
+          </Form.Item>
 
-        <Button type="primary" htmlType="submit" block>
-          Gửi OTP
-        </Button>
-      </Form>
+          <Button type="primary" htmlType="submit" block>
+            Gửi OTP
+          </Button>
+        </Form>
 
-      <div style={{ marginTop: 16 }}>
-        <Link onClick={() => navigate("/login")}>Quay lại đăng nhập</Link>
-      </div>
-    </Card>
+        <div style={{ marginTop: 16 }}>
+          <Link onClick={() => navigate("/login")}>Quay lại đăng nhập</Link>
+        </div>
+      </Card>
+    </div>
   );
 }

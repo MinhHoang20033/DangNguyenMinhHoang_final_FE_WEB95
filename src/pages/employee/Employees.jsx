@@ -1,6 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Avatar, Button, Empty, Input, message, Popconfirm, Space, Table, Typography } from "antd";
+import {
+  Avatar,
+  Button,
+  Empty,
+  Grid,
+  Input,
+  message,
+  Popconfirm,
+  Space,
+  Table,
+  Typography,
+} from "antd";
 import { deleteEmployee, getEmployees } from "@/utils/api";
 import { AccountRoleTag } from "@/features/employee";
 
@@ -8,6 +19,8 @@ const { Title } = Typography;
 const PAGE_SIZE = 10;
 
 export default function Employees() {
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
   const [employees, setEmployees] = useState([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -113,22 +126,26 @@ export default function Employees() {
   return (
     <div>
       <Space
+        direction={isMobile ? "vertical" : "horizontal"}
         style={{
           width: "100%",
           justifyContent: "space-between",
           marginBottom: 20,
         }}
+        size="middle"
       >
-        <Title level={3}>Nhân viên</Title>
+        <Title level={3} style={{ margin: 0 }}>
+          Nhân viên
+        </Title>
 
-        <Button type="primary" onClick={() => navigate("/employees/add")}>
+        <Button type="primary" block={isMobile} onClick={() => navigate("/employees/add")}>
           Thêm nhân viên
         </Button>
       </Space>
 
       <Input
         placeholder="Tìm kiếm theo tên, mã NV hoặc chức danh..."
-        style={{ maxWidth: 320, marginBottom: 20 }}
+        style={{ width: "100%", maxWidth: isMobile ? "100%" : 320, marginBottom: 20 }}
         value={search}
         onChange={(event) => {
           setSearch(event.target.value);
@@ -145,6 +162,7 @@ export default function Employees() {
           columns={columns}
           dataSource={employees}
           loading={loading}
+          size={isMobile ? "small" : "middle"}
           pagination={{
             current: page,
             pageSize: PAGE_SIZE,

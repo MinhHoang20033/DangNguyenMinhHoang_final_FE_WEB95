@@ -35,39 +35,35 @@ export default function VerifyOtp() {
   };
 
   return (
-    <Card
-      title="Xác Thực OTP"
-      style={{
-        width: 420,
-        margin: "80px auto",
-      }}
-    >
-      <div style={{ marginBottom: 16 }}>
-        <Text>
-          Mã OTP đã được gửi đến: <strong>{email}</strong>
-        </Text>
-      </div>
+    <div className="auth-page">
+      <Card title="Xác Thực OTP" className="auth-card">
+        <div style={{ marginBottom: 16 }}>
+          <Text>
+            Mã OTP đã được gửi đến: <strong>{email}</strong>
+          </Text>
+        </div>
 
-      <Form layout="vertical" onFinish={handleVerifyOtp}>
-        <Form.Item
-          name="otp"
-          label="Mã OTP"
-          rules={[
-            { required: true, message: "Vui lòng nhập mã OTP" },
-            { pattern: /^\d{6}$/, message: "Mã OTP phải gồm đúng 6 chữ số" },
-          ]}
-        >
-          <Input placeholder="Nhập mã OTP gồm 6 số" maxLength={6} inputMode="numeric" />
-        </Form.Item>
+        <Form layout="vertical" onFinish={handleVerifyOtp} size="large">
+          <Form.Item
+            name="otp"
+            label="Mã OTP"
+            rules={[
+              { required: true, message: "Vui lòng nhập mã OTP" },
+              { pattern: /^\d{6}$/, message: "Mã OTP phải gồm đúng 6 chữ số" },
+            ]}
+          >
+            <Input placeholder="Nhập mã OTP gồm 6 số" maxLength={6} inputMode="numeric" />
+          </Form.Item>
 
-        <Button type="primary" htmlType="submit" block>
-          Xác thực OTP
-        </Button>
-      </Form>
+          <Button type="primary" htmlType="submit" block>
+            Xác thực OTP
+          </Button>
+        </Form>
 
-      <div style={{ marginTop: 16 }}>
-        <Link onClick={() => navigate("/forgot-password")}>Gửi lại OTP</Link>
-      </div>
-    </Card>
+        <div style={{ marginTop: 16 }}>
+          <Link onClick={() => navigate("/forgot-password")}>Gửi lại OTP</Link>
+        </div>
+      </Card>
+    </div>
   );
 }

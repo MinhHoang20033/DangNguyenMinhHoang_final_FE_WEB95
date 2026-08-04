@@ -1,5 +1,5 @@
-import { Empty, Modal, Select, Space, Typography } from "antd";
-import { Grid } from "react-window";
+import { Empty, Grid, Modal, Select, Space, Typography } from "antd";
+import { Grid as VirtualGrid } from "react-window";
 import * as XLSX from "xlsx";
 
 import {
@@ -18,13 +18,27 @@ export function FilePreviewModal({
   onClose,
   onExcelSheetChange,
 }) {
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
+  const previewHeight = isMobile ? 360 : EXCEL_PREVIEW_HEIGHT;
+  const pdfHeight = isMobile ? 420 : 620;
+  const excelViewportWidth = isMobile ? Math.min(window.innerWidth - 72, 320) : 880;
+
   return (
     <Modal
       open={previewState.open}
       title={previewState.file?.name || "Xem trước tệp"}
       footer={null}
       onCancel={onClose}
-      width={980}
+      width={isMobile ? "100%" : 980}
+      centered={!isMobile}
+      style={isMobile ? { top: 8, paddingBottom: 0 } : undefined}
+      styles={{
+        body: {
+          maxHeight: isMobile ? "78dvh" : undefined,
+          overflow: isMobile ? "auto" : undefined,
+        },
+      }}
     >
       {previewState.loading ? (
         <Text>Đang tải xem trước...</Text>
@@ -32,16 +46,19 @@ export function FilePreviewModal({
         <iframe
           title={previewState.file?.name || "preview-pdf"}
           src={resolveFileUrl(previewState.file?.url || "")}
-          style={{ width: "100%", height: 620, border: 0, borderRadius: 12 }}
+          style={{ width: "100%", height: pdfHeight, border: 0, borderRadius: 12 }}
         />
       ) : previewState.type === "excel" ? (
         <div>
-          <Space style={{ width: "100%", justifyContent: "space-between", marginBottom: 12 }}>
+          <Space
+            direction={isMobile ? "vertical" : "horizontal"}
+            style={{ width: "100%", justifyContent: "space-between", marginBottom: 12 }}
+          >
             <Text type="secondary">
               Sheet hiện tại: {previewState.activeSheetName || previewState.sheetName || "Mặc định"}
             </Text>
             <Select
-              style={{ width: 240 }}
+              style={{ width: isMobile ? "100%" : 240 }}
               value={previewState.activeSheetName || previewState.sheetName}
               onChange={onExcelSheetChange}
               options={previewState.sheetNames.map((sheetName) => ({
@@ -54,7 +71,7 @@ export function FilePreviewModal({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "80px 1fr",
+              gridTemplateColumns: "64px 1fr",
               border: "1px solid #e5e7eb",
               borderRadius: 12,
               overflow: "hidden",
@@ -94,30 +111,30 @@ export function FilePreviewModal({
             </div>
 
             <div style={{ borderRight: "1px solid #e5e7eb" }}>
-              <Grid
+              <VirtualGrid
                 cellComponent={ExcelRowIndexCell}
                 cellProps={{}}
                 columnCount={1}
-                columnWidth={80}
-                defaultHeight={EXCEL_PREVIEW_HEIGHT}
-                defaultWidth={80}
+                columnWidth={64}
+                defaultHeight={previewHeight}
+                defaultWidth={64}
                 rowCount={Math.max(activeExcelRows.length, 1)}
                 rowHeight={EXCEL_ROW_HEIGHT}
-                style={{ height: EXCEL_PREVIEW_HEIGHT, width: 80 }}
+                style={{ height: previewHeight, width: 64 }}
               />
             </div>
 
             <div style={{ overflow: "hidden" }}>
-              <Grid
+              <VirtualGrid
                 cellComponent={ExcelDataCell}
                 cellProps={{ rows: activeExcelRows }}
                 columnCount={previewState.columnCount}
                 columnWidth={EXCEL_COLUMN_WIDTH}
-                defaultHeight={EXCEL_PREVIEW_HEIGHT}
-                defaultWidth={880}
+                defaultHeight={previewHeight}
+                defaultWidth={excelViewportWidth}
                 rowCount={Math.max(activeExcelRows.length, 1)}
                 rowHeight={EXCEL_ROW_HEIGHT}
-                style={{ height: EXCEL_PREVIEW_HEIGHT, width: 880 }}
+                style={{ height: previewHeight, width: excelViewportWidth }}
               />
             </div>
           </div>
@@ -130,8 +147,16 @@ export function FilePreviewModal({
         </div>
       ) : previewState.type === "word" ? (
         <div
-          style={{ maxHeight: 620, overflow: "auto", padding: 12, border: "1px solid #e5e7eb", borderRadius: 12 }}
-          dangerouslySetInnerHTML={{ __html: previewState.html || "<p>Không có nội dung để hiển thị.</p>" }}
+          style={{
+            maxHeight: isMobile ? 420 : 620,
+            overflow: "auto",
+            padding: 12,
+            border: "1px solid #e5e7eb",
+            borderRadius: 12,
+          }}
+          dangerouslySetInnerHTML={{
+            __html: previewState.html || "<p>Không có nội dung để hiển thị.</p>",
+          }}
         />
       ) : (
         <Empty description={previewState.error || "Định dạng này chưa hỗ trợ xem trước trực tiếp"} />
