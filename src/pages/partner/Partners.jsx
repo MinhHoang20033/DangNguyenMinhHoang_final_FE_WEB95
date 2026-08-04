@@ -403,19 +403,19 @@ export default function Partners() {
             label="Họ tên đối tác"
             rules={[{ required: true, message: "Vui lòng nhập họ tên đối tác" }]}
           >
-            <Input placeholder="Nhập họ tên" />
+            <Input prefix={<UserOutlined />} placeholder="Nhập họ tên" />
           </Form.Item>
 
           <Form.Item name="company" label="Công ty của đối tác">
-            <Input placeholder="Nhập công ty" />
+            <Input prefix={<BankOutlined />} placeholder="Nhập công ty" />
           </Form.Item>
 
           <Form.Item name="email" label="Mail đối tác">
-            <Input placeholder="name@company.com" />
+            <Input prefix={<MailOutlined />} placeholder="name@company.com" />
           </Form.Item>
 
           <Form.Item name="phone" label="Số điện thoại đối tác">
-            <Input placeholder="Nhập số điện thoại" />
+            <Input prefix={<PhoneOutlined />} placeholder="Nhập số điện thoại" />
           </Form.Item>
         </Form>
       </Modal>
