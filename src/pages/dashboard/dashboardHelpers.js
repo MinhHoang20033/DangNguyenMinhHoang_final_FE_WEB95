@@ -44,6 +44,70 @@ export const getDeadlineDayjs = (value) => {
   return parsed.isValid() ? parsed : null;
 };
 
+export const getDaysUntilDeadline = (deadlineValue, today = dayjs().startOf("day")) => {
+  const deadline = getDeadlineDayjs(deadlineValue);
+  if (!deadline) return null;
+  return deadline.startOf("day").diff(today, "day");
+};
+
+export const isUpcomingDeadline = (deadlineValue, maxDays = 7) => {
+  const daysLeft = getDaysUntilDeadline(deadlineValue);
+  if (daysLeft === null) return false;
+  return daysLeft >= 0 && daysLeft <= maxDays;
+};
+
+const buildUpcomingDeadlines = (projects) => {
+  const today = dayjs().startOf("day");
+  const items = [];
+
+  projects.forEach((project) => {
+    if (project.status !== "active") {
+      return;
+    }
+
+    const projectDaysLeft = getDaysUntilDeadline(project.deadline, today);
+    if (projectDaysLeft !== null && projectDaysLeft >= 0 && projectDaysLeft <= 7) {
+      items.push({
+        type: "project",
+        key: `project-${project._id}`,
+        projectId: project._id,
+        title: project.name || "Dự án chưa đặt tên",
+        subtitle: "Hạn dự án",
+        deadline: project.deadline,
+        daysLeft: projectDaysLeft,
+      });
+    }
+
+    (project.tasks ?? []).forEach((task) => {
+      if (task.completed) {
+        return;
+      }
+
+      const taskDaysLeft = getDaysUntilDeadline(task.deadline, today);
+      if (taskDaysLeft === null || taskDaysLeft < 0 || taskDaysLeft > 7) {
+        return;
+      }
+
+      items.push({
+        type: "task",
+        key: `task-${project._id}-${task.id}`,
+        projectId: project._id,
+        taskId: task.id,
+        title: task.title || "Task chưa đặt tên",
+        subtitle: project.name || "Dự án chưa đặt tên",
+        deadline: task.deadline,
+        daysLeft: taskDaysLeft,
+      });
+    });
+  });
+
+  return items.sort(
+    (left, right) =>
+      left.daysLeft - right.daysLeft ||
+      getDeadlineDayjs(left.deadline).valueOf() - getDeadlineDayjs(right.deadline).valueOf(),
+  );
+};
+
 export const computeDashboardData = (projects, employees) => {
   const completedProjects = projects.filter((project) => project.status !== "active");
   const overdueProjects = projects.filter(
@@ -60,18 +124,8 @@ export const computeDashboardData = (projects, employees) => {
     ? Math.round((completedTasks / allTasks.length) * 100)
     : 0;
 
-  const today = dayjs().startOf("day");
-  const upcomingDeadlineProjects = inProgressProjects
-    .filter((project) => {
-      const deadline = getDeadlineDayjs(project.deadline);
-      if (!deadline) return false;
-      const daysLeft = deadline.startOf("day").diff(today, "day");
-      return daysLeft >= 0 && daysLeft <= 7;
-    })
-    .sort(
-      (left, right) =>
-        getDeadlineDayjs(left.deadline).valueOf() - getDeadlineDayjs(right.deadline).valueOf(),
-    );
+  const upcomingDeadlines = buildUpcomingDeadlines(projects);
+  const upcomingDeadlineProjects = upcomingDeadlines.filter((item) => item.type === "project");
 
   const recentProjects = [...projects]
     .sort((left, right) => getProjectCreatedAt(right) - getProjectCreatedAt(left))
@@ -139,6 +193,7 @@ export const computeDashboardData = (projects, employees) => {
     completedTasks,
     totalTasks: allTasks.length,
     taskCompletionRate,
+    upcomingDeadlines,
     upcomingDeadlineProjects,
     recentProjects,
     projectsByTasks,

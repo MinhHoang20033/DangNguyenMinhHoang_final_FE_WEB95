@@ -218,6 +218,60 @@ function StatusDistribution({ statusCounts, totalProjects }) {
   );
 }
 
+function DeadlineLinkRow({ item, navigate }) {
+  const deadline = getDeadlineDayjs(item.deadline);
+  const typeTag =
+    item.type === "project" ? (
+      <Tag color="blue">Dự án</Tag>
+    ) : (
+      <Tag color="purple">Task</Tag>
+    );
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => navigate(`/projects/${item.projectId}`)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          navigate(`/projects/${item.projectId}`);
+        }
+      }}
+      style={{
+        borderRadius: 16,
+        border: "1px solid #e2e8f0",
+        padding: "12px 14px",
+        background: "#fff",
+        cursor: "pointer",
+        transition: "box-shadow 0.2s ease, transform 0.2s ease",
+      }}
+      onMouseEnter={(event) => {
+        event.currentTarget.style.boxShadow = "0 8px 20px rgba(15, 23, 42, 0.08)";
+        event.currentTarget.style.transform = "translateY(-1px)";
+      }}
+      onMouseLeave={(event) => {
+        event.currentTarget.style.boxShadow = "none";
+        event.currentTarget.style.transform = "none";
+      }}
+    >
+      <Row justify="space-between" align="middle" wrap={false} gutter={12}>
+        <Col flex="auto" style={{ minWidth: 0 }}>
+          <Text strong ellipsis style={{ display: "block" }}>
+            {item.title}
+          </Text>
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            {item.subtitle}
+          </Text>
+          <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
+            Còn {item.daysLeft} ngày · {deadline ? deadline.format("DD/MM/YYYY") : "Chưa có"}
+          </Text>
+        </Col>
+        <Col>{typeTag}</Col>
+      </Row>
+    </div>
+  );
+}
+
 function ProjectLinkRow({ project, navigate, extra }) {
   const statusPresentation = getProjectStatusPresentation(project);
 
@@ -554,37 +608,24 @@ export default function Dashboard() {
           <SectionCard
             title="Deadline trong 7 ngày tới"
             extra={
-              dashboardData.upcomingDeadlineProjects.length ? (
-                <Tag color="orange">{dashboardData.upcomingDeadlineProjects.length}</Tag>
+              dashboardData.upcomingDeadlines.length ? (
+                <Tag color="orange">{dashboardData.upcomingDeadlines.length}</Tag>
               ) : null
             }
             loading={loading}
           >
-            {dashboardData.upcomingDeadlineProjects.length ? (
+            {dashboardData.upcomingDeadlines.length ? (
               <Space direction="vertical" size={10} style={{ width: "100%" }}>
-                {dashboardData.upcomingDeadlineProjects.slice(0, 5).map((project) => {
-                  const deadline = getDeadlineDayjs(project.deadline);
-                  const daysLeft = deadline.startOf("day").diff(dayjs().startOf("day"), "day");
-                  return (
-                    <ProjectLinkRow
-                      key={project._id}
-                      project={project}
-                      navigate={navigate}
-                      extra={
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          Còn {daysLeft} ngày · {deadline.format("DD/MM/YYYY")}
-                        </Text>
-                      }
-                    />
-                  );
-                })}
+                {dashboardData.upcomingDeadlines.slice(0, 8).map((item) => (
+                  <DeadlineLinkRow key={item.key} item={item} navigate={navigate} />
+                ))}
               </Space>
             ) : (
               <Alert
                 type="info"
                 showIcon
                 message="Không có deadline sắp tới"
-                description="Không có dự án nào đến hạn trong 7 ngày tới."
+                description="Không có dự án hoặc task nào đến hạn trong 7 ngày tới."
               />
             )}
           </SectionCard>
