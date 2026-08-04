@@ -7,16 +7,89 @@ import {
   Grid,
   Input,
   message,
+  Pagination,
   Popconfirm,
   Space,
+  Spin,
   Table,
   Typography,
 } from "antd";
+import { DeleteOutlined, EyeOutlined, PlusOutlined, UserOutlined } from "@ant-design/icons";
 import { deleteEmployee, getEmployees } from "@/utils/api";
 import { AccountRoleTag } from "@/features/employee";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const PAGE_SIZE = 10;
+
+const softCardStyle = {
+  borderRadius: 16,
+  border: "1px solid #e2e8f0",
+  background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+  boxShadow: "0 8px 20px rgba(15, 23, 42, 0.05)",
+  padding: "14px 16px",
+};
+
+function EmployeeMobileCard({ employee, onView, onDelete }) {
+  return (
+    <div style={softCardStyle}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          gap: 12,
+          marginBottom: 12,
+        }}
+      >
+        <Avatar size={48} src={employee.avatar || undefined} icon={<UserOutlined />}>
+          {(employee.name || "N").trim().charAt(0).toUpperCase()}
+        </Avatar>
+
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <Text strong style={{ display: "block", fontSize: 16, wordBreak: "break-word" }}>
+            {employee.name || "Nhân viên"}
+          </Text>
+          <Text type="secondary" style={{ fontSize: 13 }}>
+            {employee.employeeCode || "----"}
+            {employee.role ? ` · ${employee.role}` : ""}
+          </Text>
+          <div style={{ marginTop: 8 }}>
+            <AccountRoleTag role={employee.accountRole} />
+          </div>
+        </div>
+      </div>
+
+      {employee.email ? (
+        <Text
+          type="secondary"
+          style={{
+            display: "block",
+            fontSize: 13,
+            marginBottom: 12,
+            wordBreak: "break-all",
+          }}
+        >
+          {employee.email}
+        </Text>
+      ) : null}
+
+      <Space style={{ width: "100%" }} size="small">
+        <Button
+          block
+          type="primary"
+          icon={<EyeOutlined />}
+          onClick={() => onView(employee._id)}
+        >
+          Chi tiết
+        </Button>
+        <Popconfirm title="Xóa nhân viên?" onConfirm={() => onDelete(employee._id)}>
+          <Button block danger icon={<DeleteOutlined />}>
+            Xóa
+          </Button>
+        </Popconfirm>
+      </Space>
+    </div>
+  );
+}
 
 export default function Employees() {
   const screens = Grid.useBreakpoint();
@@ -124,45 +197,89 @@ export default function Employees() {
   ];
 
   return (
-    <div>
-      <Space
-        direction={isMobile ? "vertical" : "horizontal"}
+    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      <div
         style={{
-          width: "100%",
-          justifyContent: "space-between",
-          marginBottom: 20,
+          ...softCardStyle,
+          padding: isMobile ? 16 : 20,
+          background:
+            "radial-gradient(circle at top left, rgba(59, 130, 246, 0.14), transparent 40%), linear-gradient(135deg, #f8fbff 0%, #ffffff 100%)",
         }}
-        size="middle"
       >
-        <Title level={3} style={{ margin: 0 }}>
-          Nhân viên
-        </Title>
+        <Space
+          direction={isMobile ? "vertical" : "horizontal"}
+          style={{ width: "100%", justifyContent: "space-between" }}
+          size="middle"
+        >
+          <div>
+            <Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>
+              Nhân viên
+            </Title>
+            <Text type="secondary" style={{ fontSize: 13 }}>
+              {total} nhân sự trong hệ thống
+            </Text>
+          </div>
 
-        <Button type="primary" block={isMobile} onClick={() => navigate("/employees/add")}>
-          Thêm nhân viên
-        </Button>
-      </Space>
+          <Button
+            type="primary"
+            block={isMobile}
+            icon={<PlusOutlined />}
+            onClick={() => navigate("/employees/add")}
+          >
+            Thêm nhân viên
+          </Button>
+        </Space>
+      </div>
 
-      <Input
-        placeholder="Tìm kiếm theo tên, mã NV hoặc chức danh..."
-        style={{ width: "100%", maxWidth: isMobile ? "100%" : 320, marginBottom: 20 }}
+      <Input.Search
+        placeholder="Tìm theo tên, mã NV hoặc chức danh..."
         value={search}
         onChange={(event) => {
           setSearch(event.target.value);
           setPage(1);
         }}
         allowClear
+        size={isMobile ? "large" : "middle"}
       />
 
       {loadError ? (
-        <Empty description={loadError} style={{ marginTop: 40 }} />
+        <Empty description={loadError} style={{ marginTop: 24 }} />
+      ) : isMobile ? (
+        <Spin spinning={loading}>
+          {employees.length ? (
+            <Space direction="vertical" size={12} style={{ width: "100%" }}>
+              {employees.map((employee) => (
+                <EmployeeMobileCard
+                  key={employee._id}
+                  employee={employee}
+                  onView={(id) => navigate(`/employees/${id}`)}
+                  onDelete={handleDelete}
+                />
+              ))}
+
+              {total > PAGE_SIZE ? (
+                <div style={{ display: "flex", justifyContent: "center", paddingTop: 4 }}>
+                  <Pagination
+                    current={page}
+                    pageSize={PAGE_SIZE}
+                    total={total}
+                    onChange={setPage}
+                    size="small"
+                    showSizeChanger={false}
+                  />
+                </div>
+              ) : null}
+            </Space>
+          ) : (
+            <Empty description={loading ? "Đang tải..." : "Không có nhân viên"} />
+          )}
+        </Spin>
       ) : (
         <Table
           rowKey="_id"
           columns={columns}
           dataSource={employees}
           loading={loading}
-          size={isMobile ? "small" : "middle"}
           pagination={{
             current: page,
             pageSize: PAGE_SIZE,
@@ -174,6 +291,6 @@ export default function Employees() {
           locale={{ emptyText: loading ? "Đang tải..." : "Không có nhân viên" }}
         />
       )}
-    </div>
+    </Space>
   );
 }
