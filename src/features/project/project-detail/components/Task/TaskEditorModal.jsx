@@ -1,5 +1,6 @@
 import { DownloadOutlined, EyeOutlined } from "@ant-design/icons";
-import { Button, Input, Modal, Select, Space, Typography } from "antd";
+import { Button, DatePicker, Input, Modal, Select, Space, Typography } from "antd";
+import dayjs from "dayjs";
 
 import { TASK_EXCEL_ACCEPT } from "@/features/project";
 
@@ -46,10 +47,17 @@ export function TaskEditorModal({
 
         <div>
           <Text>Deadline</Text>
-          <Input
-            type="date"
-            value={taskEditor.deadline}
-            onChange={(event) => onChange({ deadline: event.target.value })}
+          <DatePicker
+            style={{ width: "100%" }}
+            value={taskEditor.deadline ? dayjs(taskEditor.deadline) : null}
+            onChange={(value) =>
+              onChange({
+                deadline: value ? value.format("YYYY-MM-DD") : "",
+              })
+            }
+            format="DD/MM/YYYY"
+            placeholder="Chọn ngày (tuỳ chọn)"
+            allowClear
           />
         </div>
 
