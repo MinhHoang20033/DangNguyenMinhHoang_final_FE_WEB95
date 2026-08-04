@@ -6,7 +6,7 @@ import {
   EXCEL_COLUMN_WIDTH,
   EXCEL_PREVIEW_HEIGHT,
   EXCEL_ROW_HEIGHT,
-  FILE_BASE_URL,
+  resolveFileUrl,
 } from "@/features/project";
 import { ExcelDataCell, ExcelRowIndexCell } from "./ExcelPreviewCells.jsx";
 
@@ -31,7 +31,7 @@ export function FilePreviewModal({
       ) : previewState.type === "pdf" ? (
         <iframe
           title={previewState.file?.name || "preview-pdf"}
-          src={`${FILE_BASE_URL}${previewState.file?.url || ""}`}
+          src={resolveFileUrl(previewState.file?.url || "")}
           style={{ width: "100%", height: 620, border: 0, borderRadius: 12 }}
         />
       ) : previewState.type === "excel" ? (

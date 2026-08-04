@@ -3,7 +3,7 @@ import { message } from "antd";
 import * as XLSX from "xlsx";
 
 import { deleteProjectFile, uploadProjectFiles } from "@/utils/api";
-import { createEmptyPreviewState, FILE_BASE_URL } from "@/features/project";
+import { createEmptyPreviewState, resolveFileUrl } from "@/features/project";
 
 export function useProjectFiles({ projectId, project, setProject, setSaving }) {
   const [previewState, setPreviewState] = useState(createEmptyPreviewState);
@@ -47,7 +47,7 @@ export function useProjectFiles({ projectId, project, setProject, setSaving }) {
     const token = localStorage.getItem("authToken");
 
     try {
-      const response = await fetch(`${FILE_BASE_URL}${file.url}`, {
+      const response = await fetch(resolveFileUrl(file.url), {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
@@ -104,7 +104,7 @@ export function useProjectFiles({ projectId, project, setProject, setSaving }) {
 
   const openFilePreview = async (file) => {
     const extension = file.extension?.toLowerCase() || "";
-    const fileUrl = `${FILE_BASE_URL}${file.url}`;
+    const fileUrl = resolveFileUrl(file.url);
 
     setPreviewState({
       open: true,
