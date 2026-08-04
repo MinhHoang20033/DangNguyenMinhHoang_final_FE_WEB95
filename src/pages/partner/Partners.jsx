@@ -221,32 +221,52 @@ export default function Partners() {
 
   const columns = [
     {
-      title: "Họ tên đối tác",
+      title: (
+        <Space size={6}>
+          <UserOutlined />
+          Họ tên đối tác
+        </Space>
+      ),
       dataIndex: "name",
       render: (value) => value || "-",
     },
     {
-      title: "Công ty của đối tác",
+      title: (
+        <Space size={6}>
+          <BankOutlined />
+          Công ty của đối tác
+        </Space>
+      ),
       dataIndex: "company",
       render: (value) => value || "-",
     },
     {
-      title: "Mail đối tác",
+      title: (
+        <Space size={6}>
+          <MailOutlined />
+          Mail đối tác
+        </Space>
+      ),
       dataIndex: "email",
       render: (value) => value || "-",
     },
     {
-      title: "Số điện thoại đối tác",
+      title: (
+        <Space size={6}>
+          <PhoneOutlined />
+          Số điện thoại đối tác
+        </Space>
+      ),
       dataIndex: "phone",
       render: (value) => value || "-",
     },
     {
       title: "Thao tác",
-      width: 180,
+      width: 200,
       render: (_, record) => (
         <Space>
-          <Button type="link" icon={<EditOutlined />} onClick={() => openEditModal(record)}>
-            Chỉnh sửa
+          <Button size="small" icon={<EditOutlined />} onClick={() => openEditModal(record)}>
+            Sửa
           </Button>
           <Popconfirm
             title="Xóa đối tác?"
@@ -255,7 +275,7 @@ export default function Partners() {
             cancelText="Hủy"
             onConfirm={() => handleDelete(record._id)}
           >
-            <Button type="link" danger icon={<DeleteOutlined />}>
+            <Button size="small" danger icon={<DeleteOutlined />}>
               Xóa
             </Button>
           </Popconfirm>
@@ -380,22 +400,51 @@ export default function Partners() {
         >
           <Form.Item
             name="name"
-            label="Họ tên đối tác"
+            label={
+              <Space size={6}>
+                <UserOutlined />
+                Họ tên đối tác
+              </Space>
+            }
             rules={[{ required: true, message: "Vui lòng nhập họ tên đối tác" }]}
           >
-            <Input prefix={<UserOutlined style={{ color: "#94a3b8" }} />} />
+            <Input prefix={<UserOutlined style={{ color: "#94a3b8" }} />} placeholder="Nhập họ tên" />
           </Form.Item>
 
-          <Form.Item name="company" label="Công ty của đối tác">
-            <Input prefix={<BankOutlined style={{ color: "#94a3b8" }} />} />
+          <Form.Item
+            name="company"
+            label={
+              <Space size={6}>
+                <BankOutlined />
+                Công ty của đối tác
+              </Space>
+            }
+          >
+            <Input prefix={<BankOutlined style={{ color: "#94a3b8" }} />} placeholder="Nhập công ty" />
           </Form.Item>
 
-          <Form.Item name="email" label="Mail đối tác">
-            <Input prefix={<MailOutlined style={{ color: "#94a3b8" }} />} />
+          <Form.Item
+            name="email"
+            label={
+              <Space size={6}>
+                <MailOutlined />
+                Mail đối tác
+              </Space>
+            }
+          >
+            <Input prefix={<MailOutlined style={{ color: "#94a3b8" }} />} placeholder="name@company.com" />
           </Form.Item>
 
-          <Form.Item name="phone" label="Số điện thoại đối tác">
-            <Input prefix={<PhoneOutlined style={{ color: "#94a3b8" }} />} />
+          <Form.Item
+            name="phone"
+            label={
+              <Space size={6}>
+                <PhoneOutlined />
+                Số điện thoại đối tác
+              </Space>
+            }
+          >
+            <Input prefix={<PhoneOutlined style={{ color: "#94a3b8" }} />} placeholder="Nhập số điện thoại" />
           </Form.Item>
         </Form>
       </Modal>
