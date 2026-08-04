@@ -8,7 +8,6 @@ import {
   Modal,
   Row,
   Space,
-  Table,
   Typography,
 } from "antd";
 import { EMPTY_VALUE } from "@/features/project";
@@ -19,141 +18,153 @@ const { Text, Title } = Typography;
 
 const PROGRESS_SUBTITLE_PLACEHOLDER = "Kế hoạch và báo cáo tiến độ thi công dự án";
 
-function ProgressMobileCards({
+const cardShellStyle = {
+  borderRadius: 18,
+  border: "1px solid #e2e8f0",
+  background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+  boxShadow: "0 10px 28px rgba(15, 23, 42, 0.06)",
+  height: "100%",
+};
+
+function ProgressCards({
   columns,
   rows,
   canManageTasks,
   openProgressRowEditor,
   removeProgressRow,
   saving,
+  isMobile,
 }) {
   if (!rows?.length) {
     return <Empty description="Chưa có dòng tiến độ" />;
   }
 
+  const primaryColumn = columns[0];
+  const detailColumns = columns.slice(primaryColumn ? 1 : 0);
+
   return (
-    <Space direction="vertical" size={12} style={{ width: "100%" }}>
+    <Row gutter={[16, 16]}>
       {rows.map((row, rowIndex) => {
-        const primaryColumn = columns[0];
         const primaryValue = primaryColumn
           ? row.values?.[primaryColumn.id] || EMPTY_VALUE
           : `Dòng ${rowIndex + 1}`;
 
         return (
-          <Card
-            key={row.id}
-            size="small"
-            style={{
-              borderRadius: 16,
-              border: "1px solid #e2e8f0",
-              background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-              boxShadow: "0 8px 20px rgba(15, 23, 42, 0.05)",
-            }}
-            styles={{ body: { padding: 14 } }}
-          >
-            <Space direction="vertical" size={12} style={{ width: "100%" }}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  justifyContent: "space-between",
-                  gap: 10,
-                }}
-              >
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    Dòng {rowIndex + 1}
-                    {primaryColumn?.name ? ` · ${primaryColumn.name}` : ""}
-                  </Text>
-                  <Title
-                    level={5}
-                    style={{
-                      margin: "4px 0 0",
-                      wordBreak: "break-word",
-                      lineHeight: 1.35,
-                    }}
-                  >
-                    {primaryValue}
-                  </Title>
-                </div>
+          <Col xs={24} lg={12} key={row.id}>
+            <Card size="small" style={cardShellStyle} styles={{ body: { padding: isMobile ? 14 : 18 } }}>
+              <Space direction="vertical" size={isMobile ? 12 : 16} style={{ width: "100%" }}>
                 <div
                   style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 12,
-                    background: "#eff6ff",
-                    color: "#2563eb",
-                    display: "grid",
-                    placeItems: "center",
-                    fontWeight: 700,
-                    flexShrink: 0,
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    gap: 12,
                   }}
                 >
-                  {rowIndex + 1}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gap: 8,
-                }}
-              >
-                {columns.slice(primaryColumn ? 1 : 0).map((column) => {
-                  const value = row.values?.[column.id];
-                  return (
-                    <div
-                      key={`${row.id}-${column.id}`}
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <Text type="secondary" style={{ fontSize: 12, letterSpacing: 0.2 }}>
+                      Dòng {rowIndex + 1}
+                      {primaryColumn?.name ? ` · ${primaryColumn.name}` : ""}
+                    </Text>
+                    <Title
+                      level={isMobile ? 5 : 4}
                       style={{
-                        borderRadius: 12,
-                        background: "#fff",
-                        border: "1px solid #eef2f7",
-                        padding: "10px 12px",
+                        margin: "6px 0 0",
+                        wordBreak: "break-word",
+                        lineHeight: 1.35,
                       }}
                     >
-                      <Text
-                        type="secondary"
+                      {primaryValue}
+                    </Title>
+                  </div>
+                  <div
+                    style={{
+                      width: isMobile ? 36 : 44,
+                      height: isMobile ? 36 : 44,
+                      borderRadius: 14,
+                      background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
+                      color: "#1d4ed8",
+                      display: "grid",
+                      placeItems: "center",
+                      fontWeight: 700,
+                      fontSize: isMobile ? 14 : 16,
+                      flexShrink: 0,
+                      border: "1px solid #bfdbfe",
+                    }}
+                  >
+                    {rowIndex + 1}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: isMobile
+                      ? "1fr"
+                      : detailColumns.length > 2
+                        ? "repeat(2, minmax(0, 1fr))"
+                        : "1fr",
+                    gap: 10,
+                  }}
+                >
+                  {detailColumns.map((column) => {
+                    const value = row.values?.[column.id];
+                    return (
+                      <div
+                        key={`${row.id}-${column.id}`}
                         style={{
-                          display: "block",
-                          fontSize: 12,
-                          marginBottom: 4,
+                          borderRadius: 14,
+                          background: "#fff",
+                          border: "1px solid #eef2f7",
+                          padding: isMobile ? "10px 12px" : "12px 14px",
+                          minHeight: isMobile ? undefined : 84,
                         }}
                       >
-                        {column.name || "Tham số"}
-                      </Text>
-                      <Text style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                        {value || EMPTY_VALUE}
-                      </Text>
-                    </div>
-                  );
-                })}
-              </div>
+                        <Text
+                          type="secondary"
+                          style={{
+                            display: "block",
+                            fontSize: 12,
+                            marginBottom: 6,
+                            fontWeight: 500,
+                          }}
+                        >
+                          {column.name || "Tham số"}
+                        </Text>
+                        <Text style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                          {value || EMPTY_VALUE}
+                        </Text>
+                      </div>
+                    );
+                  })}
+                </div>
 
-              {canManageTasks && (
-                <Space style={{ width: "100%" }} size="small">
-                  <Button
-                    block
-                    type="primary"
-                    ghost
-                    onClick={() => openProgressRowEditor(row.id)}
-                  >
-                    Cập nhật
-                  </Button>
-                  <Button
-                    block
-                    danger
-                    onClick={() => removeProgressRow(row.id)}
-                    loading={saving}
-                  >
-                    Xóa
-                  </Button>
-                </Space>
-              )}
-            </Space>
-          </Card>
+                {canManageTasks && (
+                  <Space style={{ width: "100%" }} size="small">
+                    <Button
+                      block
+                      type="primary"
+                      ghost
+                      onClick={() => openProgressRowEditor(row.id)}
+                    >
+                      Cập nhật
+                    </Button>
+                    <Button
+                      block
+                      danger
+                      onClick={() => removeProgressRow(row.id)}
+                      loading={saving}
+                    >
+                      Xóa
+                    </Button>
+                  </Space>
+                )}
+              </Space>
+            </Card>
+          </Col>
         );
       })}
-    </Space>
+    </Row>
   );
 }
 
@@ -179,36 +190,35 @@ export function ProjectProgressSection() {
     submitProgressRowUpdate,
   } = useProjectDetailModel();
 
-  const tableColumns = [
-    ...(progressSection.columns ?? []).map((column) => ({
-      title: column.name || "Tham số",
-      dataIndex: ["values", column.id],
-      width: 220,
-      render: (value) => value || EMPTY_VALUE,
-    })),
-    ...(canManageTasks
-      ? [
-          {
-            title: "Thao tác",
-            render: (_, record) => (
-              <Space>
-                <Button onClick={() => openProgressRowEditor(record.id)}>Cập nhật</Button>
-                <Button danger onClick={() => removeProgressRow(record.id)} loading={saving}>
-                  Xóa
-                </Button>
-              </Space>
-            ),
-            width: 180,
-            fixed: "right",
-          },
-        ]
-      : []),
-  ];
-
   return (
     <>
       <Card
-        title="Tiến độ dự án"
+        styles={{
+          header: {
+            borderBottom: "1px solid #eef2f7",
+            background: "linear-gradient(180deg, #f8fbff 0%, #ffffff 100%)",
+          },
+          body: {
+            background: "#fcfdff",
+          },
+        }}
+        style={{
+          borderRadius: 20,
+          border: "1px solid #e2e8f0",
+          overflow: "hidden",
+        }}
+        title={
+          <div>
+            <Title level={isMobile ? 5 : 4} style={{ margin: 0 }}>
+              Tiến độ dự án
+            </Title>
+            {!isMobile && !!progressSection.subtitle && hasProgressColumns && (
+              <Text type="secondary" style={{ fontSize: 13 }}>
+                {progressSection.subtitle}
+              </Text>
+            )}
+          </div>
+        }
         extra={
           !isMobile ? (
             <Space wrap>
@@ -249,7 +259,7 @@ export function ProjectProgressSection() {
           />
         ) : (
           <>
-            {!!progressSection.subtitle && (
+            {isMobile && !!progressSection.subtitle && (
               <Text
                 type="secondary"
                 style={{
@@ -262,25 +272,15 @@ export function ProjectProgressSection() {
               </Text>
             )}
 
-            {isMobile ? (
-              <ProgressMobileCards
-                columns={progressSection.columns ?? []}
-                rows={progressSection.rows ?? []}
-                canManageTasks={canManageTasks}
-                openProgressRowEditor={openProgressRowEditor}
-                removeProgressRow={removeProgressRow}
-                saving={saving}
-              />
-            ) : (
-              <Table
-                rowKey="id"
-                columns={tableColumns}
-                dataSource={progressSection.rows}
-                pagination={false}
-                locale={{ emptyText: <Empty description="Chưa có dòng tiến độ" /> }}
-                scroll={{ x: 1100 }}
-              />
-            )}
+            <ProgressCards
+              columns={progressSection.columns ?? []}
+              rows={progressSection.rows ?? []}
+              canManageTasks={canManageTasks}
+              openProgressRowEditor={openProgressRowEditor}
+              removeProgressRow={removeProgressRow}
+              saving={saving}
+              isMobile={isMobile}
+            />
           </>
         )}
       </Card>
