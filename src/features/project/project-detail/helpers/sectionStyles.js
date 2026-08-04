@@ -43,4 +43,5 @@ export const SECTION_SCROLL = {
   tasks: 560,
   progress: 480,
   files: 420,
+  activityLogs: 420,
 };
